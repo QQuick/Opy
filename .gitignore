@@ -1,0 +1,6 @@
+*.pyc
+*.npp
+**.__pycache__
+dist
+Opy.egg-info
+
