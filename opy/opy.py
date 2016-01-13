@@ -30,6 +30,7 @@ import shutil
 
 programName = 'opy'
 programVersion = '1.1.19'
+ticket = 0
 
 if __name__ == '__main__':
 	print ('{} (TM) Configurable Multi Module Python Obfuscator Version {}'.format (programName.capitalize (), programVersion))
