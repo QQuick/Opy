@@ -29,7 +29,7 @@ import shutil
 # =========== Initialize constants
 
 programName = 'opy'
-programVersion = '1.1.19'
+programVersion = '1.1.21'
 
 if __name__ == '__main__':
 	print ('{} (TM) Configurable Multi Module Python Obfuscator Version {}'.format (programName.capitalize (), programVersion))
@@ -54,8 +54,12 @@ if __name__ == '__main__':
 		if open:
 			return codecs.open (filePath, encoding = 'utf-8', mode = 'w')
 			
-	def getObfuscatedName (obfuscationIndex, startsWithUnderscore):
-		return '{0}{1}{2}'.format ('_' if startsWithUnderscore else 'l', bin (obfuscationIndex) [2:] .replace ('0', 'l'), obfuscatedNameTail)
+	def getObfuscatedName (obfuscationIndex, name):
+		return '{0}{1}{2}'.format (
+			'__' if name.startswith ('__') else '_' if name.startswith ('_') else 'l',
+			bin (obfuscationIndex) [2:] .replace ('0', 'l'),
+			obfuscatedNameTail
+		)
 		
 	def scramble (stringLiteral):
 		global stringNr
@@ -280,7 +284,6 @@ Licence:
 
 	identifierRegEx = re.compile (r'''
 		\b			# Delimeted
-		(?!__)		# Not starting with __
 		(?!{0})		# Not starting with commentPlaceholder
 		(?!{1})		# Not starting with stringPlaceholder
 		[^\d\W]		# De Morgan: Not (decimal or nonalphanumerical) = not decimal and alphanumerical
@@ -451,7 +454,10 @@ import {0} as currentModule
 			
 			# Replace words to be obfuscated by obfuscated ones
 			for obfuscationIndex, obfuscatedRegEx in enumerate (obfuscatedRegExList):
-				normalContent = obfuscatedRegEx.sub (getObfuscatedName (obfuscationIndex, obfuscatedWordList [obfuscationIndex] .startswith ('_')), normalContent)	# Use regex to prevent replacing word parts
+				normalContent = obfuscatedRegEx.sub (
+					getObfuscatedName (obfuscationIndex, obfuscatedWordList [obfuscationIndex]),
+					normalContent
+				)	# Use regex to prevent replacing word parts
 				
 			# Replace string placeholders by strings
 			
@@ -473,7 +479,7 @@ import {0} as currentModule
 			
 			# Obfuscate module name
 			try:
-				targetFilePreName = getObfuscatedName (obfuscatedWordList.index (sourceFilePreName), sourceFilePreName.startswith ('_'))
+				targetFilePreName = getObfuscatedName (obfuscatedWordList.index (sourceFilePreName), sourceFilePreName)
 			except:	# Not in list, e.g. toplevel module name
 				targetFilePreName = sourceFilePreName
 			
@@ -481,7 +487,7 @@ import {0} as currentModule
 			targetChunks = targetRelSubDirectory.split ('/')
 			for index in range (len (targetChunks)):
 				try:
-					targetChunks [index] = getObfuscatedName (obfuscatedWordList.index (targetChunks [index]), targetChunks [index].startswith ('_'))
+					targetChunks [index] = getObfuscatedName (obfuscatedWordList.index (targetChunks [index]), targetChunks [index])
 				except:	# Not in list
 					pass
 			targetRelSubDirectory = '/'.join (targetChunks)
@@ -500,3 +506,7 @@ import {0} as currentModule
 			shutil.copyfile (sourceFilePath, targetFilePath)
 			
 	print ('Obfuscated words: {0}'.format (len (obfuscatedWordList)))
+	
+	# Opyfying something twice can and is allowed to fail.
+	# The obfuscation for e.g. variable 1 in round 1 can be the same as the obfuscation for e.g. variable 2 in round 2.
+	# If in round 2 variable 2 is replaced first, the obfuscation from round 1 for variable 1 will be replaced by the same thing.

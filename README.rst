@@ -24,6 +24,7 @@ Bugs fixed:
 
 What's new:
 
+- support for obfuscation of names starting with __ added
 - license changed from QQuickLicense to Apache 2.0
 - empty lines are removed
 
@@ -87,4 +88,11 @@ That's it, enjoy!
 Jacques de Hooge
 
 jacques.de.hooge@qquick.org
+
+Other packages you might like:
+
+- Lean and mean Python to JavaScript transpiler featuring multiple inheritance https://pypi.python.org/pypi/Transcrypt
+- Python PLC simulator with Arduino code generation https://pypi.python.org/pypi/SimPyLC
+- Event driven evaluation nodes https://pypi.python.org/pypi/Eden
+- A lightweight Python course taking beginners seriously (under construction): https://pypi.python.org/pypi/LightOn
 
