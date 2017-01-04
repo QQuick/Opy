@@ -80,7 +80,8 @@ Known limitations:
 
 - A comment after a string literal should be preceded by whitespace.
 - A ' or " inside a string literal should be escaped with \\ rather then doubled.
-- A # in a string literal can only be used at the start, so use 'p''#''r' rather than 'p#r'.
+- If the pep8_comments option is False (the default), a # in a string literal can only be used at the start, so use 'p''#''r' rather than 'p#r'.
+- If the pep8_comments option is set to True, however, only a <blank><blank>#<blank> cannot be used in the middle or at the end of a string literal
 - Obfuscation of string literals is unsuitable for sensitive information since it can be trivially broken
 - No renaming backdoor support for methods starting with __ (non-overridable methods, also known as private methods)
 			
