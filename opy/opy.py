@@ -29,7 +29,7 @@ import shutil
 # =========== Initialize constants
 
 programName = 'opy'
-programVersion = '1.1.21'
+programVersion = '1.1.22'
 
 if __name__ == '__main__':
 	print ('{} (TM) Configurable Multi Module Python Obfuscator Version {}'.format (programName.capitalize (), programVersion))
@@ -126,6 +126,7 @@ A comment after a string literal should be preceded by whitespace
 A ' or " inside a string literal should be escaped with \ rather then doubled
 A {2} in a string literal can only be used at the start, so use 'p''{2}''r' rather than 'p{2}r'
 Obfuscation of string literals is unsuitable for sensitive information since it can be trivially broken
+No renaming backdoor support for methods starting with __ (non-overridable methods, also known as private methods)
 
 Licence:
 {3}

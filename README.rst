@@ -82,6 +82,7 @@ Known limitations:
 - A ' or " inside a string literal should be escaped with \\ rather then doubled.
 - A # in a string literal can only be used at the start, so use 'p''#''r' rather than 'p#r'.
 - Obfuscation of string literals is unsuitable for sensitive information since it can be trivially broken
+- No renaming backdoor support for methods starting with __ (non-overridable methods, also known as private methods)
 			
 That's it, enjoy!
 
