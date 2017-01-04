@@ -230,7 +230,7 @@ Licence:
 	commentRegEx = re.compile (r'{0}{1}{2}.*?$'.format (
 		r"(?<!')",
 		r'(?<!")',
-		r'#'
+		r'  # '  # Acording to PEP8 an inline comment should start like this.
 	), re.MULTILINE)
 
 	commentPlaceholder = '_{0}_c_'.format (programName)
