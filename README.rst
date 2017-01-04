@@ -24,6 +24,7 @@ Bugs fixed:
 
 What's new:
 
+- pep8_comments option added
 - support for obfuscation of names starting with __ added
 - license changed from QQuickLicense to Apache 2.0
 - empty lines are removed
