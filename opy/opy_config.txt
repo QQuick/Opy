@@ -1,5 +1,5 @@
 '''
-Copyright (C) 2015 Jacques de Hooge, Geatec Engineering, www.geatec.com
+Copyright (C) 2014 - 2017 Jacques de Hooge, Geatec Engineering, www.geatec.com
 
 This program is free software.
 You can use, redistribute and/or modify it, but only under the terms stated in the QQuickLicence.
@@ -39,12 +39,25 @@ pyx
 
 
 #====================================================================================================
-# Extensions of files that should not be copied to the target directory
+# Extensions of files that should neither be obfuscated nor copied to the target directory
 # Typically these are .pyc files, which could easily be decompiled, breaking obfuscation
 #====================================================================================================
 
 skip_extensions = '''
 pyc
+'''
+
+
+
+#====================================================================================================
+# Fragments that, when occuring in the path of a file, will cause this file to be ignored
+# In other words, such files will neither be ofuscated nor copied
+# Use this to exclude complete directories from any processing by Opy
+# N.B. Use forward slashes rather than backslashes, also on Windows!
+#====================================================================================================
+
+skip_path_fragments = '''
+/test_skip_path_fragments/  # This fragment included for test purposes only
 '''
 
 

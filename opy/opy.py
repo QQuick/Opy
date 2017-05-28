@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 license = (
-'''_opy_Copyright 2014, 2015, 2016, 2017 Jacques de Hooge, GEATEC engineering, www.geatec.com
+'''_opy_Copyright 2014 - 2017 Jacques de Hooge, GEATEC engineering, www.geatec.com
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import shutil
 # =========== Initialize constants
 
 programName = 'opy'
-programVersion = '1.1.24'
+programVersion = '1.1.25'
 
 if __name__ == '__main__':
     print ('{} (TM) Configurable Multi Module Python Obfuscator Version {}'.format (programName.capitalize (), programVersion))
@@ -56,17 +56,23 @@ if __name__ == '__main__':
             
     def getObfuscatedName (obfuscationIndex, name):
         return '{0}{1}{2}'.format (
-            '__' if name.startswith ('__') else '_' if name.startswith ('_') else 'l',
-            bin (obfuscationIndex) [2:] .replace ('0', 'l'),
+            '__' if name.startswith ('__') else '_' if name.startswith ('_') else obfuscationCharacters [0],
+            bin (obfuscationIndex) [2:] .replace ('1', '@') .replace ('0', obfuscationCharacters [0]) .replace ('@', obfuscationCharacters [1]),
             obfuscatedNameTail
         )
+        
+    def unicharExtended (anInt):   # Needed to avoid coding error under Windows, pull request #11
+        try:
+            return unichr (anInt)
+        except ValueError:
+            return struct.pack ('i', anInt) .decode ('utf-32')        
         
     def scramble (stringLiteral):
         global stringNr
         
         if isPython2:
-            recodedStringLiteral = unicode () .join ([unichr (charBase + ord (char) + (charIndex + stringNr) % charModulus) for charIndex, char in enumerate (stringLiteral)])
-            stringKey = unichr (stringNr)
+            recodedStringLiteral = unicode () .join ([unichrExtended (charBase + ord (char) + (charIndex + stringNr) % charModulus) for charIndex, char in enumerate (stringLiteral)])
+            stringKey = unichrExtended (stringNr)
         else:
             recodedStringLiteral = str () .join ([chr (charBase + ord (char) + (charIndex + stringNr) % charModulus) for charIndex, char in enumerate (stringLiteral)])
             stringKey = chr (stringNr)
@@ -96,7 +102,7 @@ def unScramble{0} (keyedStringLiteral):
     recodedStringLiteral = rotatedStringLiteral [:rotationDistance] + rotatedStringLiteral [rotationDistance:]
         
     if isPython2{0}:
-        stringLiteral = unicode () .join ([unichr (ord (char) - charBase{0} - (charIndex + stringNr) % charModulus{0}) for charIndex, char in enumerate (recodedStringLiteral)])
+        stringLiteral = unicode () .join ([unichrExtended (ord (char) - charBase{0} - (charIndex + stringNr) % charModulus{0}) for charIndex, char in enumerate (recodedStringLiteral)])
     else:
         stringLiteral = str () .join ([chr (ord (char) - charBase{0} - (charIndex + stringNr) % charModulus{0}) for charIndex, char in enumerate (recodedStringLiteral)])
         
@@ -157,12 +163,16 @@ Licence:
 
     # =========== Read config file
 
+    defaultObfuscationCharacters = 'l1'
+    
     # Default values for config items to preserve backward compatibility if items are added
     obfuscate_strings = False
+    obfuscation_characters = defaultObfuscationCharacters
     obfuscated_name_tail = '_{}_'.format (programName)
     plain_marker = '_{}_'.format (programName)
     source_extensions = ''
     skip_extensions = ''
+    skip_path_fragments = ''
     external_modules = ''
     plain_files = ''
     plain_names = ''
@@ -187,6 +197,11 @@ Licence:
         asciiStrings = False
         
     try:
+        obfuscatedCharacters = obfuscation_characters
+    except:
+        obfuscatedCharacters = defaultObfuscationCharacters
+        
+    try:
         obfuscatedNameTail = obfuscated_name_tail
     except:
         obfuscatedNameTail = ''
@@ -203,6 +218,7 @@ Licence:
         
     sourceFileNameExtensionList = source_extensions.split ()
     skipFileNameExtensionList = skip_extensions.split ()
+    skipPathFragmentList = skip_path_fragments.split()
     externalModuleNameList = external_modules.split ()
     plainFileRelPathList = plain_files.split ()
     extraPlainWordList = plain_names.split ()
@@ -240,7 +256,7 @@ Licence:
                 r'(?<!")',
                 r'  # '  # Acording to PEP8 an inline comment should start like this.
             ), re.MULTILINE)
-        if pep8_comments else
+        if pep8Comments else
             re.compile (r'{0}{1}{2}.*?$'.format (
                 r"(?<!')",
                 r'(?<!")',
@@ -399,7 +415,12 @@ import {0} as currentModule
     obfuscatedRegExList = []
 
     for sourceFilePath in sourceFilePathList:
-        if sourceFilePath == configFilePath:    # Don't copy the config file to the target directory
+        if (                                                                                            # Certain files and directories completely ignored,
+                                                                                                        # i.e. neither obfuscated nor copied to the target directory, namely:
+            sourceFileNameExtension in skipFileNameExtensionList or                                     # - All files with extensions from skip_extensions
+            any ([skipPathFragment in sourceFilePath for skipPathFragment in skipPathFragmentList] or   # - All files whose path contains a fragment from skip_fragments 
+            sourceFilePath == configFilePath                                                            # - Opy's config file
+        ):
             continue
 
         sourceDirectory, sourceFileName = sourceFilePath.rsplit ('/', 1)
@@ -408,7 +429,7 @@ import {0} as currentModule
         
         # Read plain source
 
-        if sourceFileNameExtension in sourceFileNameExtensionList and not sourceFilePath in plainFilePathList:
+        if sourceFileNameExtension in sourceFileNameExtensionList:
             stringBase = random.randrange (64)
         
             sourceFile = codecs.open (sourceFilePath, encoding = 'utf-8')
@@ -509,16 +530,19 @@ import {0} as currentModule
             targetSubDirectory = '{0}{1}'.format (targetRootDirectory, targetRelSubDirectory) .rsplit ('/', 1) [0]
 
             # Create target path and write file
-            targetFile = createFilePath ('{0}/{1}.{2}'.format (targetSubDirectory, targetFilePreName, sourceFileNameExtension), open = True)
+            targetFilePath = '{0}/{1}.{2}'.format (targetSubDirectory, targetFilePreName, sourceFileNameExtension)
+            targetFile = createFilePath (targetFilePath, open = True)     
             targetFile.write (content)
             targetFile.close ()
-        elif not sourceFileNameExtension in skipFileNameExtensionList:
+            shutil.copymode(sourceFilePath, targetFilePath)            
+        el:
             targetSubDirectory = '{0}{1}'.format (targetRootDirectory, targetRelSubDirectory) .rsplit ('/', 1) [0]
             
             # Create target path and copy file
             targetFilePath = '{0}/{1}'.format (targetSubDirectory, sourceFileName)
             createFilePath (targetFilePath)
             shutil.copyfile (sourceFilePath, targetFilePath)
+            shutil.copymode(sourceFilePath, targetFilePath)
             
     print ('Obfuscated words: {0}'.format (len (obfuscatedWordList)))
     
