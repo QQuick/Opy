@@ -1,0 +1,106 @@
+'''
+Copyright (C) 2014 - 2017 Jacques de Hooge, Geatec Engineering, www.geatec.com
+
+This program is free software.
+You can use, redistribute and/or modify it, but only under the terms stated in the QQuickLicence.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY, without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the QQuickLicence at www.qquick.org/licence.html for details.
+'''
+
+
+
+#====================================================================================================
+# General options
+# All options have default value False
+#====================================================================================================
+
+obfuscate_strings = True        # Don't rely on this for sensitive information
+obfuscated_name_tail = '_opy_'  # Will be added to all obfuscated names to avoid clashes with plain names
+plain_marker = '_opy_'          # Strings or comments containing this marker will not be obfuscated
+pep8_comments = False           # If True, only inline comments of the form <blank><blank>#<blank>
+                                # will be recognized
+                                
+
+
+#====================================================================================================
+# Extensions of files that should be obfuscated
+# Typically these are files containing Python source code
+# Other files are just copied to the target directory
+#====================================================================================================
+
+source_extensions = '''
+py
+pyx
+'''
+
+
+
+#====================================================================================================
+# Extensions of files that should neither be obfuscated nor copied to the target directory
+# Typically these are .pyc files, which could easily be decompiled, breaking obfuscation
+#====================================================================================================
+
+skip_extensions = '''
+pyc
+'''
+
+
+
+#====================================================================================================
+# Fragments that, when occuring in the path of a file, will cause this file to be ignored
+# In other words, such files will neither be ofuscated nor copied
+# Use this to exclude complete directories from any processing by Opy
+# N.B. Use forward slashes rather than backslashes, also on Windows!
+#====================================================================================================
+
+skip_path_fragments = '''
+/test_skip_path_fragments/  # This fragment included for test purposes only
+'''
+
+
+
+#====================================================================================================
+# Modules in sys.path containing identifiers that should not be obfuscated
+# Typically these are installed standard or 3rd party modules of which you have no source code
+# Use dotted names if needed, e.g. include both matplotlib and matplotlib.pyplot
+#====================================================================================================
+
+external_modules = '''
+re
+os
+sys
+errno
+keyword
+importlib
+random
+codecs
+shutil
+'''
+
+
+
+#====================================================================================================
+# Relative path + name of Python source files containing identifiers that should not be obfuscated
+# Typically these are human readable settings files loaded and exec'ed at runtime by your program
+# Do not use this facility for files that are imported, that's what external_modules is for
+#====================================================================================================
+
+plain_files = '''
+opy_config.txt
+'''
+
+
+
+#====================================================================================================
+# Extra identifiers and module names (as opposed to contents) that should not be obfuscated
+# Probably at least the names of your main modules (so not their filenames) go here
+#====================================================================================================
+
+plain_names = '''
+opy
+currentModule
+dog_walker
+'''
