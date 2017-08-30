@@ -199,7 +199,7 @@ Licence:
     try:
         pep8Comments = pep8_comments
     except:
-        pep8Comments = False
+        pep8Comments = True
         
     sourceFileNameExtensionList = source_extensions.split ()
     skipFileNameExtensionList = skip_extensions.split ()
