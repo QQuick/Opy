@@ -29,7 +29,7 @@ import shutil
 # =========== Initialize constants
 
 programName = 'opy'
-programVersion = '1.1.25'
+programVersion = '1.1.26'
 
 if __name__ == '__main__':
     print ('{} (TM) Configurable Multi Module Python Obfuscator Version {}'.format (programName.capitalize (), programVersion))
@@ -238,13 +238,13 @@ Licence:
             re.compile (r'{0}{1}{2}.*?$'.format (
                 r"(?<!')",
                 r'(?<!")',
-                r'  # '  # Acording to PEP8 an inline comment should start like this.
+                r'  # '  # According to PEP8 an inline comment should start like this.
             ), re.MULTILINE)
         if pep8_comments else
             re.compile (r'{0}{1}{2}.*?$'.format (
                 r"(?<!')",
                 r'(?<!")',
-                r'#'    # Acording to PEP8 an inline comment should start like this.
+                r'#'
             ), re.MULTILINE)
     )
     commentPlaceholder = '_{0}_c_'.format (programName)
