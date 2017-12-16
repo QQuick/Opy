@@ -25,6 +25,11 @@ Bugs fixed:
 
 What's new:
 
+- possibiliy to specify input dir, output dir and config file documented
+- skip_path_fragmens fixed
+- explanatory comments in config file made more clear
+- reasonable defaults provided for all configuration settings
+- -h an --help added in addition to ?
 - pep8_comments option added
 - support for obfuscation of names starting with __ added
 - license changed from QQuickLicense to Apache 2.0

@@ -58,7 +58,7 @@ pyc
 #====================================================================================================
 
 skip_path_fragments = '''
-/test_skip_path_fragments/  # This fragment included for test purposes only
+test_dummy
 '''
 
 
@@ -87,6 +87,7 @@ shutil
 # Relative path + name of Python source files containing identifiers that should not be obfuscated
 # Typically these are human readable settings files loaded and exec'ed at runtime by your program
 # Do not use this facility for files that are imported, that's what external_modules is for
+# Also don't use it to keep the original file name for your main module, that what plain_names is for
 #====================================================================================================
 
 plain_files = '''
@@ -98,9 +99,10 @@ opy_config.txt
 #====================================================================================================
 # Extra identifiers and module names (as opposed to contents) that should not be obfuscated
 # Probably at least the names of your main modules (so not their filenames) go here
+# If e.g. your main module is in my_main_module.py, include my_main_module in plain_names
 #====================================================================================================
 
 plain_names = '''
 opy
-currentModule
+poly_walker_test
 '''

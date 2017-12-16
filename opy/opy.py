@@ -29,7 +29,7 @@ import shutil
 # =========== Initialize constants
 
 programName = 'opy'
-programVersion = '1.1.26'
+programVersion = '1.1.27'
 
 if __name__ == '__main__':
     print ('{} (TM) Configurable Multi Module Python Obfuscator Version {}'.format (programName.capitalize (), programVersion))
@@ -105,67 +105,62 @@ def unScramble{0} (keyedStringLiteral):
             
     def printHelpAndExit (errorLevel):
         print (r'''
-
-*******************************************************************************
+===============================================================================
 {0} will obfuscate your extensive, real world, multi module Python source code for free!
 And YOU choose per project what to obfuscate and what not, by editting the config file.
 
-BACKUP YOUR CODE AND VALUABLE DATA TO AN OFF-LINE MEDIUM FIRST TO PREVENT ACCIDENTAL LOSS OF WORK!!!
-
+- BACKUP YOUR CODE AND VALUABLE DATA TO AN OFF-LINE MEDIUM FIRST TO PREVENT ACCIDENTAL LOSS OF WORK!!!
 Then copy the default config file to the source top directory <topdir> and run {0} from there.
 It will generate an obfuscation directory <topdir>/../<topdir>_{1}
 
-At first some identifiers may be obfuscated that shouldn't be, e.g. some of those imported from external modules.   
+- At first some identifiers may be obfuscated that shouldn't be, e.g. some of those imported from external modules.
 Adapt your config file to avoid this, e.g. by adding external module names that will be recursively scanned for identifiers.
 You may also exclude certain words or files in your project from obfuscation explicitly.
-Source directory, obfuscation directory and config file path can also be supplied as command line parameters in that order.
-Comments and string literals can be marked as plain, bypassing obfuscation
+
+- Source directory, obfuscation directory and config file path can also be supplied as command line parameters.
+The config file path should be something like C:/config_files/opy.cnf, so including the file name and extension.
+opy [<source directory> [<target directory> [<config file path>]]]
+
+- Comments and string literals can be marked as plain, bypassing obfuscation
+Be sure to take a look at the comments in the config file opy_config.txt to discover all features.
 
 Known limitations:
 
-A comment after a string literal should be preceded by whitespace
-A ' or " inside a string literal should be escaped with \ rather then doubled
-If the pep8_comments option is False (the default), a {2} in a string literal can only be used at the start, so use 'p''{2}''r' rather than 'p{2}r'
-If the pep8_comments option is set to True, however, only a <blank><blank>{2}<blank> cannot be used in the middle or at the end of a string literal
-Obfuscation of string literals is unsuitable for sensitive information since it can be trivially broken
-No renaming backdoor support for methods starting with __ (non-overridable methods, also known as private methods)
+- A comment after a string literal should be preceded by whitespace
+- A ' or " inside a string literal should be escaped with \ rather then doubled
+- If the pep8_comments option is False (the default), a {2} in a string literal can only be used at the start, so use 'p''{2}''r' rather than 'p{2}r'
+- If the pep8_comments option is set to True, however, only a <blank><blank>{2}<blank> cannot be used in the middle or at the end of a string literal
+- Obfuscation of string literals is unsuitable for sensitive information since it can be trivially broken
+- No renaming backdoor support for methods starting with __ (non-overridable methods, also known as private methods)
 
 Licence:
 {3}
-*******************************************************************************
+===============================================================================
+
         '''.format (programName.capitalize (), programName, r'#', license))
         exit (errorLevel)
         
     # ============ Assign directories ============
 
     if len (sys.argv) > 1:
-        if '?' in sys.argv [1]:
-            printHelpAndExit (0)
-        sourceRootDirectory = sys.argv [1]
+        for switch in '?', '-h', '--help':
+            if switch in sys.argv [1]:
+                printHelpAndExit (0)
+        sourceRootDirectory = sys.argv [1] .replace ('\\', '/')
     else:
         sourceRootDirectory = os.getcwd () .replace ('\\', '/')
 
     if len (sys.argv) > 2:
-        targetRootDirectory = sys.argv [2]
+        targetRootDirectory = sys.argv [2] .replace ('\\', '/')
     else:
         targetRootDirectory = '{0}/{1}_{2}'.format (* (sourceRootDirectory.rsplit ('/', 1) + [programName]))
 
     if len (sys.argv) > 3:
-        configFilePath = sys.argv [3]
+        configFilePath = sys.argv [3] .replace ('\\', '/')
     else:
         configFilePath = '{0}/{1}_config.txt'.format (sourceRootDirectory, programName)
-
+        
     # =========== Read config file
-
-    # Default values for config items to preserve backward compatibility if items are added
-    obfuscate_strings = False
-    obfuscated_name_tail = '_{}_'.format (programName)
-    plain_marker = '_{}_'.format (programName)
-    source_extensions = ''
-    skip_extensions = ''
-    external_modules = ''
-    plain_files = ''
-    plain_names = ''
         
     try:
         configFile = open (configFilePath)
@@ -175,45 +170,40 @@ Licence:
         
     exec (configFile.read ())
     configFile.close ()
-
-    try:
-        obfuscateStrings = obfuscate_strings
-    except:
-        obfuscateStrings = False
-        
-    try:
-        asciiStrings = ascii_strings
-    except:
-        asciiStrings = False
-        
-    try:
-        obfuscatedNameTail = obfuscated_name_tail
-    except:
-        obfuscatedNameTail = ''
-        
-    try:
-        plainMarker = plain_marker
-    except:
-        plainMarker = '_{0}_'.format (programName)
-        
-    try:
-        pep8Comments = pep8_comments
-    except:
-        pep8Comments = True
-        
-    sourceFileNameExtensionList = source_extensions.split ()
-    skipFileNameExtensionList = skip_extensions.split ()
-    externalModuleNameList = external_modules.split ()
-    plainFileRelPathList = plain_files.split ()
-    extraPlainWordList = plain_names.split ()
+    
+    def getConfig (parameter, default):
+        try:
+            return eval (parameter)
+        except:
+            return default
+    
+    obfuscateStrings = getConfig ('obfuscate_strings', False)
+    asciiStrings = getConfig ('ascii_strings', False)
+    obfuscatedNameTail = getConfig ('obfuscated_name_tail', '_{}_')
+    plainMarker = getConfig ('plain_marker', '_{}_'.format (programName))
+    pep8Comments = getConfig ('pep8_comments', True)
+    sourceFileNameExtensionList = getConfig ('source_extensions.split ()', ['py', 'pyx'])
+    skipFileNameExtensionList = getConfig ('skip_extensions.split ()', ['pyc'])
+    skipPathFragmentList = getConfig ('skip_path_fragments.split ()', [])
+    externalModuleNameList = getConfig ('external_modules.split ()', [])
+    plainFileRelPathList = getConfig ('plain_files.split ()', [])
+    extraPlainWordList = getConfig ('plain_names.split ()', [])
 
     # ============ Gather source file names
 
-    sourceFilePathList = [
+    rawSourceFilePathList = [
         '{0}/{1}'.format (directory.replace ('\\', '/'), fileName)
         for directory, subDirectories, fileNames in os.walk (sourceRootDirectory)
         for fileName in fileNames
     ]
+    
+    def hasSkipPathFragment (sourceFilePath):
+        for skipPathFragment in skipPathFragmentList:
+            if skipPathFragment in sourceFilePath:
+                return True
+        return False
+    
+    sourceFilePathList = [sourceFilePath for sourceFilePath in rawSourceFilePathList if not hasSkipPathFragment (sourceFilePath)]
 
     # =========== Define comment swapping tools
             
@@ -315,7 +305,12 @@ Licence:
 
     skipWordSet = set (keyword.kwlist + ['__init__'] + extraPlainWordList)  # __init__ should be in, since __init__.py is special
 
-    plainFilePathList = ['{0}/{1}'.format (sourceRootDirectory, plainFileRelPath) for plainFileRelPath in plainFileRelPathList]
+    rawPlainFilePathList = ['{0}/{1}'.format (sourceRootDirectory, plainFileRelPath) for plainFileRelPath in plainFileRelPathList]
+    
+    # Prevent e.g. attempt to open opy_config.txt if it is in a different location but still listed under plain_files
+    
+    plainFilePathList = [plainFilePath for plainFilePath in rawPlainFilePathList if os.path.exists (plainFilePath)]
+    
     for plainFilePath in plainFilePathList:
         plainFile = open (plainFilePath)
         content = plainFile.read ()
