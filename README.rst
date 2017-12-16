@@ -26,7 +26,7 @@ Bugs fixed:
 What's new:
 
 - possibiliy to specify input dir, output dir and config file documented
-- skip_path_fragmens fixed
+- skip_path_fragments fixed
 - explanatory comments in config file made more clear
 - reasonable defaults provided for all configuration settings
 - -h an --help added in addition to ?
