@@ -29,7 +29,7 @@ import shutil
 # =========== Initialize constants
 
 programName = 'opy'
-programVersion = '1.1.27'
+programVersion = '1.1.28'
 
 if __name__ == '__main__':
     print ('{} (TM) Configurable Multi Module Python Obfuscator Version {}'.format (programName.capitalize (), programVersion))

@@ -14,6 +14,7 @@ And YOU choose per project what to obfuscate and what not, by editing the config
 
 Bugs fixed:
 
+- utf-8 forced for setup (issue 25)
 - pep8_comments config setting now defaults to True, making it possible for opy to obfuscate itself as a test
 - erroneous copying of directories above project root fixed
 - name of __init__.py files now left unaltered by default
