@@ -5,9 +5,10 @@ sys.path.append ('opy')
 import opy
 
 from setuptools import setup
+import codecs
 
 def read (*paths):
-	with open (os.path.join (*paths), 'r') as aFile:
+	with codecs.open (os.path.join (*paths), 'r', encoding = 'utf-8') as aFile:
 		return aFile.read()
 
 setup (
