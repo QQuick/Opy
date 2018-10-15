@@ -25,13 +25,15 @@ import importlib
 import random
 import codecs
 import shutil
+import opymaster
+import __builtin__
 
 # =========== Initialize constants
 
-programName = 'opy'
-programVersion = '1.1.28'
-
-if __name__ == '__main__':
+if (__name__ == '__main__') or opymaster.isLibrary:
+    programName = opymaster.programName
+    programVersion = opymaster.programVersion
+    
     print ('{} (TM) Configurable Multi Module Python Obfuscator Version {}'.format (programName.capitalize (), programVersion))
     print ('Copyright (C) Geatec Engineering. License: Apache 2.0 at  http://www.apache.org/licenses/LICENSE-2.0\n')
 
@@ -142,24 +144,44 @@ Licence:
         
     # ============ Assign directories ============
 
-    if len (sys.argv) > 1:
-        for switch in '?', '-h', '--help':
-            if switch in sys.argv [1]:
-                printHelpAndExit (0)
-        sourceRootDirectory = sys.argv [1] .replace ('\\', '/')
-    else:
-        sourceRootDirectory = os.getcwd () .replace ('\\', '/')
+    if opymaster.isLibrary:
+        # Use opymaster controls
+        if opymaster.printHelpAndExit: printHelpAndExit(0)                  
+                    
+        if opymaster.sourceRootDirectory is not None:                    
+            sourceRootDirectory = opymaster.sourceRootDirectory.replace ('\\', '/')
+        else:
+            sourceRootDirectory = os.getcwd () .replace ('\\', '/')
 
-    if len (sys.argv) > 2:
-        targetRootDirectory = sys.argv [2] .replace ('\\', '/')
-    else:
-        targetRootDirectory = '{0}/{1}_{2}'.format (* (sourceRootDirectory.rsplit ('/', 1) + [programName]))
+        if opymaster.targetRootDirectory is not None:
+            targetRootDirectory = opymaster.targetRootDirectory.replace ('\\', '/')
+        else:
+            targetRootDirectory = '{0}/{1}_{2}'.format (* (sourceRootDirectory.rsplit ('/', 1) + [programName]))
 
-    if len (sys.argv) > 3:
-        configFilePath = sys.argv [3] .replace ('\\', '/')
+        if opymaster.configFilePath is not None:
+            configFilePath = opymaster.configFilePath.replace ('\\', '/')
+        else:
+            configFilePath = '{0}/{1}_config.txt'.format (sourceRootDirectory, programName)    
     else:
-        configFilePath = '{0}/{1}_config.txt'.format (sourceRootDirectory, programName)
-        
+        # Use command line arguments
+        if len (sys.argv) > 1:
+            for switch in '?', '-h', '--help':
+                if switch in sys.argv [1]:
+                    printHelpAndExit (0)
+            sourceRootDirectory = sys.argv [1] .replace ('\\', '/')
+        else:
+            sourceRootDirectory = os.getcwd () .replace ('\\', '/')
+
+        if len (sys.argv) > 2:
+            targetRootDirectory = sys.argv [2] .replace ('\\', '/')
+        else:
+            targetRootDirectory = '{0}/{1}_{2}'.format (* (sourceRootDirectory.rsplit ('/', 1) + [programName]))
+
+        if len (sys.argv) > 3:
+            configFilePath = sys.argv [3] .replace ('\\', '/')
+        else:
+            configFilePath = '{0}/{1}_config.txt'.format (sourceRootDirectory, programName)
+            
     # =========== Read config file
         
     try:
@@ -382,7 +404,7 @@ import {0} as currentModule
             except:
                 pass
 
-    addExternalNames (__builtins__)
+    addExternalNames (__builtin__) 
     addExternalNames (externalModules)
 
     skipWordList = list (skipWordSet)

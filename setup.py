@@ -4,7 +4,7 @@ import sys
 sys.path.append ('opy')
 import opy
 
-from setuptools import setup
+from distutils.core import setup
 import codecs
 
 def read (*paths):
@@ -25,8 +25,6 @@ setup (
 	author = 'Jacques de Hooge',
 	author_email = 'jacques.de.hooge@qquick.org',
 	packages = ['opy'],	
-	include_package_data = True,
-	install_requires = [],
 	classifiers = [
 		'Development Status :: 5 - Production/Stable',
 		'Intended Audience :: Developers',
