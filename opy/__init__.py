@@ -1,20 +1,20 @@
 """
 Library Interface for Opy Utility 
 """
-from opymaster import programName, programVersion
-import opymaster
+import settings
  
 def obfuscate( printHelpAndExit    = False
              , sourceRootDirectory = None
              , targetRootDirectory = None
              , configFilePath      = None
              ):    
-    opymaster.isLibrary           = True
-    opymaster.printHelpAndExit    = printHelpAndExit
-    opymaster.sourceRootDirectory = sourceRootDirectory
-    opymaster.targetRootDirectory = targetRootDirectory
-    opymaster.configFilePath      = configFilePath    
+    settings.isLibraryInvoked    = True
+    settings.printHelpAndExit    = printHelpAndExit
+    settings.sourceRootDirectory = sourceRootDirectory
+    settings.targetRootDirectory = targetRootDirectory
+    settings.configFilePath      = configFilePath    
     if not printHelpAndExit :
+        print "Opy Settings"
         print "sourceRootDirectory: %s" % (sourceRootDirectory,)
         print "targetRootDirectory: %s" % (targetRootDirectory,)
         print "configFilePath: %s"      % (configFilePath,)    

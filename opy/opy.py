@@ -25,14 +25,19 @@ import importlib
 import random
 import codecs
 import shutil
-import opymaster
 import __builtin__
-
+try: 
+    import settings 
+    isLibraryInvoked = settings.isLibraryInvoked
+except:
+    isLibraryInvoked=False
+   
 # =========== Initialize constants
 
-if (__name__ == '__main__') or opymaster.isLibrary:
-    programName = opymaster.programName
-    programVersion = opymaster.programVersion
+programName = 'opy'
+programVersion = '1.1.28.1' # Changed from 1.1.28 to denote fork
+
+if (__name__ == '__main__') or isLibraryInvoked:
     
     print ('{} (TM) Configurable Multi Module Python Obfuscator Version {}'.format (programName.capitalize (), programVersion))
     print ('Copyright (C) Geatec Engineering. License: Apache 2.0 at  http://www.apache.org/licenses/LICENSE-2.0\n')
@@ -144,22 +149,22 @@ Licence:
         
     # ============ Assign directories ============
 
-    if opymaster.isLibrary:
-        # Use opymaster controls
-        if opymaster.printHelpAndExit: printHelpAndExit(0)                  
+    if isLibraryInvoked:
+        # Use settings controls
+        if settings.printHelpAndExit: printHelpAndExit(0)                  
                     
-        if opymaster.sourceRootDirectory is not None:                    
-            sourceRootDirectory = opymaster.sourceRootDirectory.replace ('\\', '/')
+        if settings.sourceRootDirectory is not None:                    
+            sourceRootDirectory = settings.sourceRootDirectory.replace ('\\', '/')
         else:
             sourceRootDirectory = os.getcwd () .replace ('\\', '/')
 
-        if opymaster.targetRootDirectory is not None:
-            targetRootDirectory = opymaster.targetRootDirectory.replace ('\\', '/')
+        if settings.targetRootDirectory is not None:
+            targetRootDirectory = settings.targetRootDirectory.replace ('\\', '/')
         else:
             targetRootDirectory = '{0}/{1}_{2}'.format (* (sourceRootDirectory.rsplit ('/', 1) + [programName]))
 
-        if opymaster.configFilePath is not None:
-            configFilePath = opymaster.configFilePath.replace ('\\', '/')
+        if settings.configFilePath is not None:
+            configFilePath = settings.configFilePath.replace ('\\', '/')
         else:
             configFilePath = '{0}/{1}_config.txt'.format (sourceRootDirectory, programName)    
     else:
