@@ -149,8 +149,9 @@ Licence:
         
     # ============ Assign directories ============
 
+    isLibraryConfig = False
     if isLibraryInvoked:
-        # Use settings controls
+        # Use library settings 
         if settings.printHelpAndExit: printHelpAndExit(0)                  
                     
         if settings.sourceRootDirectory is not None:                    
@@ -163,7 +164,10 @@ Licence:
         else:
             targetRootDirectory = '{0}/{1}_{2}'.format (* (sourceRootDirectory.rsplit ('/', 1) + [programName]))
 
-        if settings.configFilePath is not None:
+        if settings.configFilePath==False :
+            isLibraryConfig = True    
+            configFilePath = ""
+        elif settings.configFilePath is not None:
             configFilePath = settings.configFilePath.replace ('\\', '/')
         else:
             configFilePath = '{0}/{1}_config.txt'.format (sourceRootDirectory, programName)    
@@ -188,12 +192,15 @@ Licence:
             configFilePath = '{0}/{1}_config.txt'.format (sourceRootDirectory, programName)
             
     # =========== Read config file
-        
-    try:
-        configFile = open (configFilePath)
-    except Exception as exception:
-        print (exception)
-        printHelpAndExit (1)
+
+    if isLibraryConfig:
+        configFile = settings.configSettings.toVirtualFile()
+    else :        
+        try:
+            configFile = open (configFilePath)
+        except Exception as exception:
+            print (exception)
+            printHelpAndExit (1)
         
     exec (configFile.read ())
     configFile.close ()
