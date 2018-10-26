@@ -7,6 +7,9 @@ targetRootDirectory = None
 configFilePath      = None # None == default, False == use configSettings
 
 class ConfigSettings :
+    """
+    See opy_config.txt for details on these settings.
+    """    
     def __init__( self ) :    
         self.obfuscate_strings = True        
         self.obfuscated_name_tail = '_opy_'  
@@ -39,6 +42,7 @@ class ConfigSettings :
         ]
         self.plain_files = []
         self.plain_names = []
+        self.mask_external_modules = True
 
     def __str__( self ):
         # TODO : rewrite this in a more clean/clever manner... 
@@ -47,6 +51,7 @@ class ConfigSettings :
             + "obfuscated_name_tail = '%s'\n" % self.obfuscated_name_tail
             + "plain_marker = '%s'\n" % self.plain_marker
             + "pep8_comments = %s\n" % str(self.pep8_comments)
+            + "mask_external_modules = %s\n" % str(self.mask_external_modules)
         )
         text += "source_extensions ='''\n"
         for item in self.source_extensions : text += "%s\n" % item

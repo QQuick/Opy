@@ -21,7 +21,7 @@ import os
 import sys
 import errno
 import keyword
-import importlib
+import importlib  # @UnusedImport
 import random
 import codecs
 import shutil
@@ -50,8 +50,148 @@ if (__name__ == '__main__') or isLibraryInvoked:
     charModulus = 7
 
     # =========== Utilities
+   
+    
+    modAliases = {}
+    objAliases = {}
+    aliasCounter = 0
+        
+    def assignExternalAliases( content ):
+        """
+        Provides aliases for the non-obfuscated imports.
+        Those aliases then become obfuscated, thereby making
+        the code a bit more difficult to read... 
+        (of course it's not too hard to de-obfuscate that!)        
+        """
+                
+        importKeyword = "import "
+        fromKeyword = "from "
+        asKeyword = "as"
+        subModDelim = "."
+        listDelim = ","        
+        space = " "        
+        aliasTemplate = "alias_%d"  
+        
+        # split the content into lines
+        lines = content.split('\n')    
+            
+        # roll all lines broken via continuations
+        # into long single lines, thus eliminating that
+        # messy detail from any subsequent logic
+        lineContinue = "\\"
+        revLines = []
+        longLine = ""
+        for l in lines:
+            if l.strip().endswith( lineContinue ):
+                longLine = "%s%s%s" % (longLine, l.rstrip()[:-1], space)
+            else :            
+                longLine = "%s%s" % (longLine, l)
+                revLines.append( longLine )
+                longLine = ""
+        lines = revLines
+    
+        def isImportLn( line ):
+            # mulit-line strings/comments should have been isolated
+            # from the content before assignExternalAliases was called
+            stripped = line.strip()
+            isImportLine = stripped.startswith( importKeyword )
+            isFromLine = stripped.startswith( fromKeyword )
+            isEither = (isImportLine or isFromLine) 
+            return isEither, isImportLine, isFromLine
+            
+        def isClearTextMod( modName ):
+            modSubs = modName.split( subModDelim )
+            subMod = ""
+            for sub in modSubs:                
+                subMod += sub if subMod == "" else (subModDelim + sub)
+                if subMod in externalModuleNameList: return True
+            return False                        
+        
+        def addAliases( line ):
+            global modAliases, objAliases, aliasCounter
+            # Determine if this is an import/from line
+            stripped = line.strip()
+            _, isImportLine, isFromLine = isImportLn( line )
+            # If it is an import/from line, split off the items 
+            # part of it, and remove any extra spaces in that. 
+            # Skip to the next line if there are no import items 
+            # to parse.
+            if isImportLine :                           
+                try: itemsPart = space.join( stripped.split( space )[1:] )     
+                except: return line
+            elif isFromLine:
+                tokens = stripped.split( space )                
+                try:
+                    # On a from line, if the module name is not preserved 
+                    # anyway, skip the entire line 
+                    modName = tokens[1]     
+                    if not isClearTextMod( modName ): return line                                                
+                    itemsPart = space.join( tokens[3:] )     
+                except: return line
+            else: return line               
+            # Split & strip all the import items 
+            items = itemsPart.split( listDelim )
+            normList = [i.strip() for i in items]
+            revisedImports=[]
+            for item in normList :
+                # tokenize the list item 
+                tokens = item.split( space )
+                importName = tokens[0]
+                # On an import line, if the module name is not preserved 
+                # anyway, skip the item
+                if isImportLine :
+                    modName = importName
+                    if not isClearTextMod( modName ): continue                    
+                # determine if the import is aliased
+                try   : isAliased = tokens[1]==asKeyword
+                except: isAliased = False
+                # give the import an alias if it doesn't have one
+                if not isAliased:                             
+                    alias = ( aliasTemplate % 
+                              (aliasCounter,) )
+                    aliasCounter+=1
+                    item = "%s as %s" % ( importName, alias )      
+                    if isImportLine : 
+                        modAliases[importName]=alias
+                    else: 
+                        objAliases[importName]=alias                                    
+                revisedImports.append( item )                    
+            # re-build the line                                                        
+            leadSpaces = space * (len(line) - len(line.lstrip(space)))
+            itemsPart = listDelim.join( revisedImports )    
+            line = ( ("%simport %s" % (leadSpaces, itemsPart))
+                     if isImportLine else
+                     ("%sfrom %s import %s" % 
+                       (leadSpaces, modName, itemsPart)) )
+            return line
+        
+        # add aliases for the external imports 
+        revLines = []                   
+        for l in lines: revLines.append( addAliases( l ) )  
+        
+        # apply the aliases to original import names 
+        modAliasesRegEx={}
+        for modName in modAliases.keys() :
+            modAliasesRegEx[modName] = ( 
+                re.compile( r'\b{0}.\b'.format( modName ) ) ) 
+        objAliasesRegEx={}
+        for objName in objAliases.keys() :
+            objAliasesRegEx[objName] = ( 
+                re.compile( r'\b{0}\b'.format( objName ) ) )                          
+        lines = revLines
+        revLines = []   
+        for line in lines:
+            if not isImportLn( line )[0]:
+                for modName, regEx in modAliasesRegEx.iteritems():
+                    line = regEx.sub( modAliases[modName] + ".", line )
+                for objName, regEx in objAliasesRegEx.iteritems():
+                    line = regEx.sub( objAliases[objName], line )
+            revLines.append( line )
 
-    def createFilePath (filePath, open = False):
+        # return the revised and reassembled lines                    
+        return '\n'.join( revLines )
+
+    def createFilePath (filePath, open = False):  # @ReservedAssignment
         try:
             os.makedirs (filePath.rsplit ('/', 1) [0])
         except OSError as exception:
@@ -220,9 +360,10 @@ Licence:
     skipFileNameExtensionList = getConfig ('skip_extensions.split ()', ['pyc'])
     skipPathFragmentList = getConfig ('skip_path_fragments.split ()', [])
     externalModuleNameList = getConfig ('external_modules.split ()', [])
+    maskExternalModules = getConfig ('mask_external_modules', False)
     plainFileRelPathList = getConfig ('plain_files.split ()', [])
     extraPlainWordList = getConfig ('plain_names.split ()', [])
-
+    
     # ============ Gather source file names
 
     rawSourceFilePathList = [
@@ -264,7 +405,7 @@ Licence:
                 r'(?<!")',
                 r'  # '  # According to PEP8 an inline comment should start like this.
             ), re.MULTILINE)
-        if pep8_comments else
+        if pep8_comments else  # @UndefinedVariable
             re.compile (r'{0}{1}{2}.*?$'.format (
                 r"(?<!')",
                 r'(?<!")',
@@ -374,7 +515,7 @@ import {0} as currentModule
                         '''.format (externalModuleName),
                         globals ()
                     )
-                    setattr (self, attributeName, currentModule)    
+                    setattr (self, attributeName, currentModule)    # @UndefinedVariable
                 except Exception as exception:
                     print (exception)
                     setattr (self, attributeName, None) # So at least the attribute name will be available
@@ -441,7 +582,7 @@ import {0} as currentModule
             stringBase = random.randrange (64)
         
             sourceFile = codecs.open (sourceFilePath, encoding = 'utf-8')
-            content = sourceFile.read ()
+            content = sourceFile.read () 
             sourceFile.close ()
             
             replacedComments = []
@@ -483,12 +624,16 @@ import {0} as currentModule
             # Content list is prepended to normalContent later
             
             normalContent = fromFutureRegEx.sub (moveFromFuture, normalContent)
-                
+       
+            # Provide aliases for the non-obfuscated imports.
+            if maskExternalModules : 
+                normalContent = assignExternalAliases( normalContent )
+                 
             # Obfuscate content without strings
             
             # All source words and module name
             sourceWordSet = set (re.findall (identifierRegEx, normalContent) + [sourceFilePreName])
-
+            
             # Add source words that are not yet obfuscated and shouldn't be skipped to global list of obfuscated words, preserve order of what's already there
             strippedSourceWordSet = sourceWordSet.difference (obfuscatedWordList).difference (skipWordSet)  # Leave out what is already or shouldn't be obfuscated
             strippedSourceWordList = list (strippedSourceWordSet)

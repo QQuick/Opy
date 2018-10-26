@@ -51,8 +51,8 @@ pyc
 
 
 #====================================================================================================
-# Fragments that, when occuring in the path of a file, will cause this file to be ignored
-# In other words, such files will neither be ofuscated nor copied
+# Fragments that, when occurring in the path of a file, will cause this file to be ignored
+# In other words, such files will neither be obfuscated nor copied
 # Use this to exclude complete directories from any processing by Opy
 # N.B. Use forward slashes rather than backslashes, also on Windows!
 #====================================================================================================
@@ -79,7 +79,38 @@ importlib
 random
 codecs
 shutil
+traceback
+ConfigParser
 '''
+
+
+#====================================================================================================
+# *** BETA FEATURE ***
+#
+# The imported identifiers in the external_modules list (not to be obfuscated),
+# may instead be "masked" by assigning obfuscated ALIASES to them.  This is  
+# fairly trivial to reverse engineer, but still reduces immediate readability.
+# Note that this auto alias feature is not yet respectful of scoping details. 
+# It can also cause name collisions, as it is not yet context aware.
+#  
+# Name collision example :
+#
+#	from os.path import join
+#   someString = ','.join( someList )
+#
+#   Becomes:
+#
+#	from os.path import join as alias_0
+#   someString = ','.alias_0( someList )
+#
+# Pre-Obfuscated solution:
+#
+#	from os.path import join as joinPath
+#   ...
+#      
+#====================================================================================================
+
+mask_external_modules = True
 
 
 

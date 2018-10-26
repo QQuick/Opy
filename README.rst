@@ -30,6 +30,9 @@ Bugs fixed:
 
 What's new:
 
+- implementation of Opy as an import / library provided 
+- mask_external_modules *BETA* feature added
+- line continuations combined into single lines 
 - possibility to specify input dir, output dir and config file documented
 - skip_path_fragments implemented
 - explanatory comments in config file made more clear
