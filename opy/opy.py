@@ -285,14 +285,14 @@ Licence:
 ===============================================================================
 
         '''.format (programName.capitalize (), programName, r'#', license))
-        exit (errorLevel)
+        if errorLevel is not None: exit (errorLevel)
         
     # ============ Assign directories ============
 
     isLibraryConfig = False
     if isLibraryInvoked:
         # Use library settings 
-        if settings.printHelpAndExit: printHelpAndExit(0)                  
+        if settings.printHelp: printHelpAndExit(None)                   
                     
         if settings.sourceRootDirectory is not None:                    
             sourceRootDirectory = settings.sourceRootDirectory.replace ('\\', '/')

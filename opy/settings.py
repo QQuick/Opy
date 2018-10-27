@@ -1,7 +1,7 @@
 import io
 
 isLibraryInvoked    = False
-printHelpAndExit    = False
+printHelp           = False
 sourceRootDirectory = None
 targetRootDirectory = None
 configFilePath      = None # None == default, False == use configSettings
