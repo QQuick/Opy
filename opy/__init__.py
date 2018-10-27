@@ -2,8 +2,8 @@
 Library Interface for Opy Utility 
 """
 import settings
-from settings import ConfigSettings as OpyConfigSettings
- 
+from settings import ConfigSettings as OpyConfig
+
 def obfuscate( printHelpAndExit    = False
              , sourceRootDirectory = None
              , targetRootDirectory = None
