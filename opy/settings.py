@@ -37,12 +37,17 @@ class ConfigSettings :
             ,'random'
             ,'codecs'
             ,'shutil'
-            ,'traceback'
+            ,'traceback'            
+            ,"collections"
+            ,"json"
+            ,"datetime" 
             ,'ConfigParser'
         ]
         self.plain_files = []
         self.plain_names = []
         self.mask_external_modules = True
+        self.dry_run = False
+        self.subset_files = []
 
     def __str__( self ):
         # TODO : rewrite this in a more clean/clever manner... 
@@ -52,6 +57,7 @@ class ConfigSettings :
             + "plain_marker = '%s'\n" % self.plain_marker
             + "pep8_comments = %s\n" % str(self.pep8_comments)
             + "mask_external_modules = %s\n" % str(self.mask_external_modules)
+            + "dry_run  = %s\n" % str(self.dry_run)
         )
         text += "source_extensions ='''\n"
         for item in self.source_extensions : text += "%s\n" % item
@@ -70,6 +76,9 @@ class ConfigSettings :
         text += "'''\n"
         text += "plain_names ='''\n"
         for item in self.plain_names : text += "%s\n" % item
+        text += "'''\n"        
+        text += "subset_files ='''\n"
+        for item in self.subset_files : text += "%s\n" % item
         text += "'''\n"
         return text
 

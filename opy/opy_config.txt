@@ -80,6 +80,9 @@ random
 codecs
 shutil
 traceback
+collections
+json
+datetime 
 ConfigParser
 '''
 
@@ -137,3 +140,24 @@ plain_names = '''
 opy
 poly_walker_test
 '''
+
+
+
+#====================================================================================================
+# Setting dry_run to True prevents creating any actual results.  Analytics are still performed and  
+# can be evaluated / utilized. 
+#====================================================================================================
+
+dry_run = False
+
+
+
+#====================================================================================================
+# Specify a subset of files to process, rather than the entire source directory.  May be useful during
+# the process of tweaking the source or the configuration. 
+#====================================================================================================
+
+subset_files = '''
+'''
+
+
