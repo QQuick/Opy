@@ -20,31 +20,55 @@ def obfuscate( sourceRootDirectory = None
     print "sourceRootDirectory: %s" % (sourceRootDirectory,)
     print "targetRootDirectory: %s" % (targetRootDirectory,)
     print "configFilePath: %s"      % (configFilePath,)
-    print "configSettings: \n%s"    % (configSettings,)    
-    import opy
+    print "configSettings: \n%s"    % (configSettings,)
+    __runOpy()
 
 def analyze( sourceRootDirectory = None
            , fileList            = []  
            , configSettings      = OpyConfig()
            ):    
+    global opy
     settings.isLibraryInvoked    = True
     settings.printHelp           = False
     settings.sourceRootDirectory = sourceRootDirectory
     settings.targetRootDirectory = None
-    configSettings.subset_files  = fileList
-    configSettings.dry_run       = True
     settings.configSettings      = configSettings
-    settings.configFilePath      = False         
+    settings.configFilePath      = False
+
+    init_subset_files = settings.configSettings.subset_files
+    init_dry_run      = settings.configSettings.dry_run         
+    settings.configSettings.subset_files  = fileList
+    settings.configSettings.dry_run       = True
+         
     print "Analyze Opy Settings"
     print "sourceRootDirectory: %s" % (sourceRootDirectory,)
     print "configSettings: \n%s"    % (configSettings,)    
-    import opy
-    return ( opy.obfuscatedWordList
-           , opy.parser.obfuscatedModImports
-           , opy.parser.maskedIdentifiers
+    __runOpy()
+
+    settings.configSettings.subset_files = init_subset_files
+    settings.configSettings.dry_run      = init_dry_run
+    
+    return ( opy.obfuscatedWordList          
+           , opy.parser.obfuscatedModImports 
+           , opy.parser.maskedIdentifiers     
     )
     
 def printHelp():    
     settings.isLibraryInvoked = True
-    settings.printHelp        = True    
-    import opy    
+    settings.printHelp        = True
+    __runOpy()
+    
+def __runOpy():        
+    global opy    
+    try :
+        if settings.isPython2 : 
+            reload( opy )
+        else :
+            try : # Python 3.0 to 3.3                
+                import imp 
+                imp.reload( opy )
+            except : # Python 3.4+                    
+                import importlib
+                importlib.reload( opy ) # @UndefinedVariable
+    except : import opy
+    

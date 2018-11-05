@@ -73,6 +73,7 @@ external_modules = '''
 re
 os
 sys
+io
 errno
 keyword
 importlib

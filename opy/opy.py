@@ -351,7 +351,7 @@ Licence:
 
     skipWordSet = set (keyword.kwlist + ['__init__'] + extraPlainWordList)  # __init__ should be in, since __init__.py is special
 
-    rawPlainFilePathList = ['{0}/{1}'.format (sourceRootDirectory, plainFileRelPath) for plainFileRelPath in plainFileRelPathList]
+    rawPlainFilePathList = ['{0}/{1}'.format (sourceRootDirectory, plainFileRelPath.replace ('\\', '/')) for plainFileRelPath in plainFileRelPathList]
     
     # Prevent e.g. attempt to open opy_config.txt if it is in a different location but still listed under plain_files
     

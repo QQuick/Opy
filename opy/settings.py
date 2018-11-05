@@ -1,4 +1,6 @@
-import io
+import io, sys
+
+isPython2 = sys.version_info [0] == 2
 
 isLibraryInvoked    = False
 printHelp           = False
@@ -31,6 +33,7 @@ class ConfigSettings :
              're'
             ,'os'
             ,'sys'
+            ,'io'
             ,'errno'
             ,'keyword'
             ,'importlib'
