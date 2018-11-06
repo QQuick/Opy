@@ -32,7 +32,10 @@ What's new:
 
 - implementation of Opy as an import / library provided 
 - mask_external_modules *BETA* feature added
-- line continuations combined into single lines 
+- added dry_run option
+- added analyze() function to library to assist with identification
+  of obfuscated imports / vs left in clear text / vs "masked"
+- line continuations combined into single lines
 - possibility to specify input dir, output dir and config file documented
 - skip_path_fragments implemented
 - explanatory comments in config file made more clear
@@ -131,8 +134,19 @@ Known limitations:
 - If the pep8_comments option is set to True, however, only a <blank><blank>#<blank> cannot be used in the middle or at the end of a string literal
 - Obfuscation of string literals is unsuitable for sensitive information since it can be trivially broken
 - No renaming back door support for methods starting with __ (non-overridable methods, also known as private methods)
-			
+
+* "Masking" (beta feature) fails under a few conditions. 
+	A) It is not yet respectful of scoping details. 
+ 	B) It can cause name collisions, as it is not yet "context aware".
+ 	C) There is a problem in the handling of masking module members with 
+ 	   names that are otherwise set to be preserved in clear text. 
+The solution to such problems is to assign your own aliases for those use 
+cases which the utility is not yet able to resolve. See the "bugs" directory
+for examples of known problems (which will hopefully be resolved!). 
+   
 -------------------------------------------------------
+
+
 			
 That's it, enjoy!
 

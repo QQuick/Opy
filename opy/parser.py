@@ -1,26 +1,27 @@
 import re
 
-NEWLINE            = '\n'
-SPACE              = ' '    
-CONTINUATION       = "\\"
-IMPORT_PREFIX      = "import "
-FROM_PREFIX        = "from "
-AS_KEYWORD         = "as"
-SUB_MOD_DELIM      = "."
-MEMBER_DELIM       = "."
-LIST_DELIM          = ","        
-ALIAS_TEMPLATE      = "alias_%d"  
-SET_ALIAS_TEMPLATE  = "%s as %s"
-IMPORT_TEMPLATE     = "%simport %s"
-FROM_TEMPLATE       = "%sfrom %s import %s"  
-IDENTIFIER_REGEX    = r'\b{0}.\b'
-CONTINUED_TEMPLATE  = "%s%s%s"
-LONG_LINE_TEMPLATE  = "%s%s"
+NEWLINE              = '\n'
+SPACE                = ' '    
+CONTINUATION         = "\\"
+IMPORT_PREFIX        = "import "
+FROM_PREFIX          = "from "
+AS_KEYWORD           = "as"
+SUB_MOD_DELIM        = "."
+MEMBER_DELIM         = "."
+LIST_DELIM           = ","        
+ALIAS_TEMPLATE       = "alias_%d"  
+SET_ALIAS_TEMPLATE   = "%s as %s"
+IMPORT_TEMPLATE      = "%simport %s"
+FROM_TEMPLATE        = "%sfrom %s import %s"  
+IDENTIFIER_REGEX     = r'\b{0}\b'
+IDENTIFIER_DOT_REGEX = r'\b{0}\.\b'
+CONTINUED_TEMPLATE   = "%s%s%s"
+LONG_LINE_TEMPLATE   = "%s%s"
 
 obfuscatedModImports = set()
 maskedIdentifiers    = set() 
 __modAliases = {}
-__objAliases = {} 
+__mbrAliases = {} 
 
 def injectAliases( fileContent, clearTextMods ):
     return __parseImports( fileContent, True, clearTextMods )
@@ -44,9 +45,9 @@ def __parseImports( fileContent, isMasking, clearTextMods=[] ):
         (of course it's not too hard to de-obfuscate that!)        
     """
 
-    global __modAliases, __objAliases                
+    global __modAliases, __mbrAliases                
     __modAliases = {} 
-    __objAliases = {}
+    __mbrAliases = {}
 
     def isImportLn( line ):
         # mulit-line strings/comments should have been isolated
@@ -66,7 +67,7 @@ def __parseImports( fileContent, isMasking, clearTextMods=[] ):
         return False                        
     
     def processLine( line ):
-        global obfuscatedModImports, maskedIdentifiers, __modAliases, __objAliases
+        global obfuscatedModImports, maskedIdentifiers, __modAliases, __mbrAliases
         # determine if this is an import/from line
         stripped = line.strip()
         _, isImportLine, isFromLine = isImportLn( line )
@@ -110,12 +111,12 @@ def __parseImports( fileContent, isMasking, clearTextMods=[] ):
             # give the import an alias if it doesn't have one
             if not isAliased:                             
                 alias = ( ALIAS_TEMPLATE % 
-                          (len(__modAliases) + len(__objAliases),) )
+                          (len(__modAliases) + len(__mbrAliases),) )
                 item = SET_ALIAS_TEMPLATE % ( importName, alias )      
                 if isImportLine : 
                     __modAliases[importName]=alias
                 else: 
-                    __objAliases[importName]=alias        
+                    __mbrAliases[importName]=alias        
                 maskedIdentifiers.add( importName )                                                
             revisedImports.append( item )                    
         # re-build the line                                                        
@@ -128,21 +129,28 @@ def __parseImports( fileContent, isMasking, clearTextMods=[] ):
         return line
 
     def applyAliases( lines ): 
-        __modAliasesRegEx={}
-        for modName in __modAliases.keys() :
-            __modAliasesRegEx[modName] = ( 
-                re.compile( IDENTIFIER_REGEX.format( modName ) ) ) 
-        __objAliasesRegEx={}
-        for objName in __objAliases.keys() :
-            __objAliasesRegEx[objName] = ( 
-                re.compile( IDENTIFIER_REGEX.format( objName ) ) )                          
+        #TODO: trim this down. It functions, it's ugly...
+        nakedAliasesRegEx={}
+        dotAliasesRegEx={}        
+        for name in maskedIdentifiers :
+            nakedAliasesRegEx[name] = ( 
+                re.compile( IDENTIFIER_REGEX.format( name ) ) ) 
+        for name in maskedIdentifiers :
+            dotAliasesRegEx[name] = ( 
+                re.compile( IDENTIFIER_DOT_REGEX.format( name ) ) ) 
         revLines = []   
         for line in lines:
             if not isImportLn( line )[0]:
-                for modName, regEx in __modAliasesRegEx.iteritems():
-                    line = regEx.sub( __modAliases[modName] + MEMBER_DELIM, line )
-                for objName, regEx in __objAliasesRegEx.iteritems():
-                    line = regEx.sub( __objAliases[objName], line )
+                for name, regEx in dotAliasesRegEx.iteritems():
+                    modAlias = __modAliases.get(name)
+                    mbrAlias = __mbrAliases.get(name)                    
+                    if mbrAlias: line = regEx.sub( mbrAlias + MEMBER_DELIM, line )
+                    elif modAlias: line = regEx.sub( modAlias + MEMBER_DELIM, line )                    
+                for name, regEx in nakedAliasesRegEx.iteritems():
+                    modAlias = __modAliases.get(name)
+                    mbrAlias = __mbrAliases.get(name)                    
+                    if mbrAlias: line = regEx.sub( mbrAlias, line )
+                    elif modAlias: line = regEx.sub( modAlias, line )                    
             revLines.append( line )
         return revLines
 

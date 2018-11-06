@@ -96,8 +96,12 @@ ConfigParser
 # fairly trivial to reverse engineer, but still reduces immediate readability.
 # Note that this auto alias feature is not yet respectful of scoping details. 
 # It can also cause name collisions, as it is not yet context aware.
+# Another current problem is in the handling of masking module members with 
+# names that are otherwise set to be preserved in clear text. The solution
+# to such problems is to assign your own aliases for those use cases that are 
+# not yet resolved. 
 #  
-# Name collision example :
+# Name collision example 1:
 #
 #	from os.path import join
 #   someString = ','.join( someList )
@@ -107,10 +111,35 @@ ConfigParser
 #	from os.path import join as alias_0
 #   someString = ','.alias_0( someList )
 #
+#   (that's a problem because join is a string function too!)
+#
 # Pre-Obfuscated solution:
 #
 #	from os.path import join as joinPath
 #   ...
+#
+# Name collision example 2:
+#
+# from datetime import datetime 
+# def processObj( obj ):
+#     if isinstance( obj, datetime ): print "Date/Time!"
+#
+#   Becomes:
+#
+# from datetime import datetime as alias_0
+# def processObj( obj ):
+#     if isinstance( obj, datetime ): print "Date/Time!"
+#
+# (This is the opposite problem as the first. Note the 
+#  type evaluation line did not apply the alias! Why?
+#  Because "datetime" is a module name being preserved 
+#  in clear text)
+#
+# Pre-Obfuscated solution:
+#
+# from datetime import datetime as dt
+# def processObj( obj ):
+#     if isinstance( obj, dt ): print "Date/Time!"   
 #      
 #====================================================================================================
 
