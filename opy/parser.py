@@ -1,13 +1,14 @@
 import re
+import ast
 
 NEWLINE              = '\n'
 SPACE                = ' '    
 CONTINUATION         = "\\"
+TAB                  = '\t'
 IMPORT_PREFIX        = "import "
 FROM_PREFIX          = "from "
 AS_KEYWORD           = "as"
-SUB_MOD_DELIM        = "."
-MEMBER_DELIM         = "."
+MEMBER_DELIM = SUB_MOD_DELIM = "."
 LIST_DELIM           = ","        
 ALIAS_TEMPLATE       = "alias_%d"  
 SET_ALIAS_TEMPLATE   = "%s as %s"
@@ -17,7 +18,9 @@ IDENTIFIER_REGEX     = r'\b{0}\b'
 IDENTIFIER_DOT_REGEX = r'\b{0}\.\b'
 CONTINUED_TEMPLATE   = "%s%s%s"
 LONG_LINE_TEMPLATE   = "%s%s"
+MAGIC_PREFFIX = MAGIC_SUFFIX = PRIVATE_PREFIX = "__"
 
+# -----------------------------------------------------------------------------
 obfuscatedModImports = set()
 maskedIdentifiers    = set() 
 __modAliases = {}
@@ -28,7 +31,8 @@ def injectAliases( fileContent, clearTextMods ):
 
 def analyzeImports( fileContent, clearTextMods=[] ):
     __parseImports( fileContent, False, clearTextMods )
-    
+
+# TODO: Rewrite using the ast module. See findPublicIdentifiers()...    
 def __parseImports( fileContent, isMasking, clearTextMods=[] ):
     """
     This function has two modes of operation, switched between via
@@ -186,3 +190,47 @@ def __toLines( fileContent, combineContinued=False ):
                 longLine = ""
         lines = revLines
     return lines 
+
+# -----------------------------------------------------------------------------
+def findPublicIdentifiers( fileContent ):
+    publicIds=set()
+    root = ast.parse( fileContent )    
+    publicIds.update( __findAstPublicNameAssigns( root ) )
+    publicIds.update( __findAstPublicFuncsClassesAttribs( root ) )
+    return publicIds
+
+# recursive
+def __findAstPublicFuncsClassesAttribs( node ):
+    publicNodes = set()    
+    for child in ast.iter_child_nodes( node ):       
+        if( isinstance( child, ast.FunctionDef ) or 
+            isinstance( child, ast.ClassDef ) ):            
+            if __isPrivatePrefix( child.name ) : continue                        
+            publicNodes.add( child.name ) 
+            publicNodes.update( __findAstPublicAttribAssigns( child ) )            
+            publicNodes.update( __findAstPublicFuncsClassesAttribs( child ) )
+    return publicNodes
+
+def __findAstPublicAttribAssigns( node ):
+    publicNodes = set()    
+    for child in ast.iter_child_nodes( node ):
+        if isinstance( child, ast.Assign ):
+            for target in child.targets :
+                if isinstance( target, ast.Attribute ) :        
+                    if not __isPrivatePrefix( target.attr ):    
+                        publicNodes.add( target.attr )
+    return publicNodes
+
+def __findAstPublicNameAssigns( node ):
+    publicNodes = []    
+    for child in ast.iter_child_nodes( node ):
+        if isinstance( child, ast.Assign ):
+            for target in child.targets :
+                if isinstance( target, ast.Name ) :
+                    if not __isPrivatePrefix( target.id ):    
+                        publicNodes.append( target.id )
+    return publicNodes
+
+def __isPrivatePrefix( identifier ):
+    return ( identifier.startswith( PRIVATE_PREFIX )
+             and not identifier.endswith( MAGIC_SUFFIX ) )

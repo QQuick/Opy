@@ -49,6 +49,7 @@ class ConfigSettings :
         self.plain_files = []
         self.plain_names = []
         self.mask_external_modules = True
+        self.skip_public = False
         self.dry_run = False
         self.subset_files = []
 
@@ -60,6 +61,7 @@ class ConfigSettings :
             + "plain_marker = '%s'\n" % self.plain_marker
             + "pep8_comments = %s\n" % str(self.pep8_comments)
             + "mask_external_modules = %s\n" % str(self.mask_external_modules)
+            + "skip_public = %s\n" % str(self.skip_public)
             + "dry_run  = %s\n" % str(self.dry_run)
         )
         text += "source_extensions ='''\n"

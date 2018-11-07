@@ -32,6 +32,7 @@ What's new:
 
 - implementation of Opy as an import / library provided 
 - mask_external_modules *BETA* feature added
+- skip_public *BETA* feature added
 - added dry_run option
 - added analyze() function to library to assist with identification
   of obfuscated imports / vs left in clear text / vs "masked"
@@ -135,17 +136,72 @@ Known limitations:
 - Obfuscation of string literals is unsuitable for sensitive information since it can be trivially broken
 - No renaming back door support for methods starting with __ (non-overridable methods, also known as private methods)
 
+* "Skip Public" (beta feature) has some weaknesses.
+ 	This can encounter "name collisions", and end up leaving some identifiers 
+ 	in clear text that you wanted to be obfuscated.  Such should NOT cause
+ 	operational errors, at least in the resulting code.  
+
 * "Masking" (beta feature) fails under a few conditions. 
 	A) It is not yet respectful of scoping details. 
  	B) It can cause name collisions, as it is not yet "context aware".
  	C) There is a problem in the handling of masking module members with 
  	   names that are otherwise set to be preserved in clear text. 
-The solution to such problems is to assign your own aliases for those use 
-cases which the utility is not yet able to resolve. See the "bugs" directory
-for examples of known problems (which will hopefully be resolved!). 
-   
--------------------------------------------------------
+    The solution to such problems is to assign YOUR OWN ALIASES for those use 
+    cases which the utility is not yet able to resolve. See the "bugs" directory
+    for examples of known problems (which will hopefully be resolved!). 
 
+	Masking name collision example 1:
+	
+	    from os.path import join
+	    someString = ','.join( someList )
+	
+	    Becomes:
+	
+	    from os.path import join as alias_0
+	    someString = ','.alias_0( someList )
+	
+	    (that's a problem because join is a string function too!)
+	
+	Pre-Obfuscated solution:
+	
+	    from os.path import join as joinPath
+	    someString = ','.join( someList )
+	
+	    This will work because os.path.join now
+        has a manually assigned alias, so the auto alias
+        mechanism simply will not be employed for it. 
+		Obfuscation of "joinPath" will work without issue.
+	
+	Masking name collision example 2:
+	
+	    from datetime import datetime 
+	    def processObj( obj ):
+	       if isinstance( obj, datetime ): print "Date/Time!"
+	       
+	    Becomes:
+	
+	    from datetime import datetime as alias_0
+	    def processObj( obj ):
+	        if isinstance( obj, datetime ): print "Date/Time!"
+	
+	    This is the opposite problem as example 1. Note the 
+	    type evaluation line did not apply the alias! Why?
+	    Because "datetime" is a module name being preserved 
+	    in clear text, and thus ignored by the current alias 
+	    applying algorithm.
+	
+	Pre-Obfuscated solution:
+	
+	    from datetime import datetime as dt
+	    def processObj( obj ):
+	        if isinstance( obj, dt ): print "Date/Time!"
+        
+        This will work because datetime.datetime now
+        has a manually assigned alias, so the auto alias
+        mechanism simply will not be employed for it. 
+		Obfuscation of "dt" will work without issue.
+            
+-------------------------------------------------------
 
 			
 That's it, enjoy!

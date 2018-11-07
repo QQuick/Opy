@@ -51,6 +51,17 @@ pyc
 
 
 #====================================================================================================
+# Enabling skip_public prevents obfuscating those members of a module which are not explicitly 
+# denoted - or scoped - as "private" (using a __ double underscore prefix).
+# This is most useful for obfuscating a library you wish to distribute, while leaving those 
+# identifiers such as constants, functions, class names, and class attributes in clear text. 
+#====================================================================================================
+
+skip_public = False
+
+
+
+#====================================================================================================
 # Fragments that, when occurring in the path of a file, will cause this file to be ignored
 # In other words, such files will neither be obfuscated nor copied
 # Use this to exclude complete directories from any processing by Opy
@@ -94,53 +105,6 @@ ConfigParser
 # The imported identifiers in the external_modules list (not to be obfuscated),
 # may instead be "masked" by assigning obfuscated ALIASES to them.  This is  
 # fairly trivial to reverse engineer, but still reduces immediate readability.
-# Note that this auto alias feature is not yet respectful of scoping details. 
-# It can also cause name collisions, as it is not yet context aware.
-# Another current problem is in the handling of masking module members with 
-# names that are otherwise set to be preserved in clear text. The solution
-# to such problems is to assign your own aliases for those use cases that are 
-# not yet resolved. 
-#  
-# Name collision example 1:
-#
-#	from os.path import join
-#   someString = ','.join( someList )
-#
-#   Becomes:
-#
-#	from os.path import join as alias_0
-#   someString = ','.alias_0( someList )
-#
-#   (that's a problem because join is a string function too!)
-#
-# Pre-Obfuscated solution:
-#
-#	from os.path import join as joinPath
-#   ...
-#
-# Name collision example 2:
-#
-# from datetime import datetime 
-# def processObj( obj ):
-#     if isinstance( obj, datetime ): print "Date/Time!"
-#
-#   Becomes:
-#
-# from datetime import datetime as alias_0
-# def processObj( obj ):
-#     if isinstance( obj, datetime ): print "Date/Time!"
-#
-# (This is the opposite problem as the first. Note the 
-#  type evaluation line did not apply the alias! Why?
-#  Because "datetime" is a module name being preserved 
-#  in clear text)
-#
-# Pre-Obfuscated solution:
-#
-# from datetime import datetime as dt
-# def processObj( obj ):
-#     if isinstance( obj, dt ): print "Date/Time!"   
-#      
 #====================================================================================================
 
 mask_external_modules = True
@@ -184,7 +148,8 @@ dry_run = False
 
 #====================================================================================================
 # Specify a subset of files to process, rather than the entire source directory.  May be useful during
-# the process of tweaking the source or the configuration. 
+# the process of tweaking the source or the configuration.  It also allows for running the process
+# in separate steps, with alternate configurations per sets of files. 
 #====================================================================================================
 
 subset_files = '''

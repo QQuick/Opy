@@ -222,6 +222,7 @@ Licence:
     skipPathFragmentList = getConfig ('skip_path_fragments.split ()', [])
     externalModuleNameList = getConfig ('external_modules.split ()', [])
     maskExternalModules = getConfig ('mask_external_modules', False)
+    skipPublicIdentifiers = getConfig ('skip_public', False)
     plainFileRelPathList = getConfig ('plain_files.split ()', [])
     extraPlainWordList = getConfig ('plain_names.split ()', [])
     dryRun = getConfig ('dry_run', False)
@@ -455,6 +456,11 @@ import {0} as currentModule
             sourceFile = codecs.open (sourceFilePath, encoding = 'utf-8')
             content = sourceFile.read () 
             sourceFile.close ()
+
+            skippedPublicSet=set()
+            if skipPublicIdentifiers:
+                skippedPublicSet.update( parser.findPublicIdentifiers( content ) )
+                skipWordSet.update( skippedPublicSet )   
             
             replacedComments = []
             contentList = content.split ('\n', 2)
@@ -495,7 +501,7 @@ import {0} as currentModule
             # Content list is prepended to normalContent later
             
             normalContent = fromFutureRegEx.sub (moveFromFuture, normalContent)
-                   
+                    
             # Parse content to find imports and optionally provide aliases for those in clear text,
             # so that they will become "masked" upon obfuscation.
             if maskExternalModules : 
@@ -574,6 +580,7 @@ import {0} as currentModule
     print ('Obfuscated words: {0}'.format (len (obfuscatedWordList)))
     print ('Obfuscated module imports: {0}'.format (parser.obfuscatedModImports))
     print ('Masked identifier imports: {0}'.format (parser.maskedIdentifiers))
+    print ('Skipped public identifiers: {0}'.format (skippedPublicSet))
     
     # Opyfying something twice can and is allowed to fail.
     # The obfuscation for e.g. variable 1 in round 1 can be the same as the obfuscation for e.g. variable 2 in round 2.
