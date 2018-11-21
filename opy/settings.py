@@ -46,12 +46,14 @@ class ConfigSettings :
             ,"datetime" 
             ,'ConfigParser'
         ]
+        self.replacement_modules = {}
         self.plain_files = []
         self.plain_names = []
         self.mask_external_modules = True
         self.skip_public = False
-        self.dry_run = False
         self.subset_files = []
+        self.dry_run = False
+        self.prepped_only = False        
 
     def __str__( self ):
         # TODO : rewrite this in a more clean/clever manner... 
@@ -62,7 +64,8 @@ class ConfigSettings :
             + "pep8_comments = %s\n" % str(self.pep8_comments)
             + "mask_external_modules = %s\n" % str(self.mask_external_modules)
             + "skip_public = %s\n" % str(self.skip_public)
-            + "dry_run  = %s\n" % str(self.dry_run)
+            + "dry_run = %s\n" % str(self.dry_run)
+            + "prepped_only = %s\n" % str(self.prepped_only)            
         )
         text += "source_extensions ='''\n"
         for item in self.source_extensions : text += "%s\n" % item
@@ -75,6 +78,10 @@ class ConfigSettings :
         text += "'''\n"
         text += "external_modules ='''\n"
         for item in self.external_modules : text += "%s\n" % item
+        text += "'''\n"
+        text += "replacement_modules ='''\n"
+        for k,v in self.replacement_modules.iteritems() : 
+            text += "%s:%s\n" % (k,v)        
         text += "'''\n"
         text += "plain_files ='''\n"
         for item in self.plain_files : text += "%s\n" % item

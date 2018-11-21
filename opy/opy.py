@@ -226,8 +226,17 @@ Licence:
     plainFileRelPathList = getConfig ('plain_files.split ()', [])
     extraPlainWordList = getConfig ('plain_names.split ()', [])
     dryRun = getConfig ('dry_run', False)
+    preppedOnly = getConfig ('prepped_only', False)
     subsetFilesList = getConfig ('subset_files.split ()', [])
-    
+
+    #TODO: Handle spaces between key/colon/value, e.g. 'key : value'     
+    replacementModulesDict = {}
+    replacementModulesPairList = getConfig ('replacement_modules.split ()', [])
+    for pair in replacementModulesPairList:
+        pairParts = pair.split(":") 
+        try: replacementModulesDict[ pairParts[0].strip() ]= pairParts[1].strip()
+        except: continue        
+        
     # ============ Gather source file names
 
     rawSourceFilePathList = [
@@ -501,33 +510,38 @@ import {0} as currentModule
             # Content list is prepended to normalContent later
             
             normalContent = fromFutureRegEx.sub (moveFromFuture, normalContent)
-                    
+
+            # Replace any imported modules per the old/new (key/value) pairs provided
+            if len(replacementModulesDict) > 0 : 
+                normalContent = parser.replaceImports( normalContent, replacementModulesDict )
+                                
             # Parse content to find imports and optionally provide aliases for those in clear text,
             # so that they will become "masked" upon obfuscation.
             if maskExternalModules : 
                 normalContent = parser.injectAliases( normalContent, externalModuleNameList )
             else:  
                 parser.analyzeImports( normalContent, externalModuleNameList )
+
+            if not preppedOnly :
+                # Obfuscate content without strings
                 
-            # Obfuscate content without strings
-            
-            # All source words and module name
-            sourceWordSet = set (re.findall (identifierRegEx, normalContent) + [sourceFilePreName])
-            
-            # Add source words that are not yet obfuscated and shouldn't be skipped to global list of obfuscated words, preserve order of what's already there
-            strippedSourceWordSet = sourceWordSet.difference (obfuscatedWordList).difference (skipWordSet)  # Leave out what is already or shouldn't be obfuscated
-            strippedSourceWordList = list (strippedSourceWordSet)
-            strippedSourceRegExList = [re.compile (r'\b{0}\b'.format (sourceWord)) for sourceWord in strippedSourceWordList]    # Regex used to replace obfuscated words
-            obfuscatedWordList += strippedSourceWordList            
-            obfuscatedRegExList += strippedSourceRegExList
-            
-            # Replace words to be obfuscated by obfuscated ones
-            for obfuscationIndex, obfuscatedRegEx in enumerate (obfuscatedRegExList):
-                normalContent = obfuscatedRegEx.sub (
-                    getObfuscatedName (obfuscationIndex, obfuscatedWordList [obfuscationIndex]),
-                    normalContent
-                )   # Use regex to prevent replacing word parts
+                # All source words and module name
+                sourceWordSet = set (re.findall (identifierRegEx, normalContent) + [sourceFilePreName])
                 
+                # Add source words that are not yet obfuscated and shouldn't be skipped to global list of obfuscated words, preserve order of what's already there
+                strippedSourceWordSet = sourceWordSet.difference (obfuscatedWordList).difference (skipWordSet)  # Leave out what is already or shouldn't be obfuscated
+                strippedSourceWordList = list (strippedSourceWordSet)
+                strippedSourceRegExList = [re.compile (r'\b{0}\b'.format (sourceWord)) for sourceWord in strippedSourceWordList]    # Regex used to replace obfuscated words
+                obfuscatedWordList += strippedSourceWordList            
+                obfuscatedRegExList += strippedSourceRegExList
+                
+                # Replace words to be obfuscated by obfuscated ones
+                for obfuscationIndex, obfuscatedRegEx in enumerate (obfuscatedRegExList):
+                    normalContent = obfuscatedRegEx.sub (
+                        getObfuscatedName (obfuscationIndex, obfuscatedWordList [obfuscationIndex]),
+                        normalContent
+                    )   # Use regex to prevent replacing word parts
+                    
             # Replace string placeholders by strings
             
             stringIndex = -1
@@ -543,24 +557,26 @@ import {0} as currentModule
             # Remove empty lines
             
             content = '\n'.join ([line for line in [line.rstrip () for line in content.split ('\n')] if line])
-            
-            # Write target 
-             
-            # Obfuscate module name
-            try:
-                targetFilePreName = getObfuscatedName (obfuscatedWordList.index (sourceFilePreName), sourceFilePreName)
-            except: # Not in list, e.g. toplevel module name
-                targetFilePreName = sourceFilePreName
-            
-            # Obfuscate module subdir names, but only above the project root!
-            targetChunks = targetRelSubDirectory.split ('/')
-            for index in range (len (targetChunks)):
+                
+            if preppedOnly :
+                targetFilePreName = sourceFilePreName 
+                targetSubDirectory = '{0}{1}'.format (targetRootDirectory, targetRelSubDirectory) .rsplit ('/', 1) [0]
+            else :                     
+                # Obfuscate module name
                 try:
-                    targetChunks [index] = getObfuscatedName (obfuscatedWordList.index (targetChunks [index]), targetChunks [index])
-                except: # Not in list
-                    pass
-            targetRelSubDirectory = '/'.join (targetChunks)
-            targetSubDirectory = '{0}{1}'.format (targetRootDirectory, targetRelSubDirectory) .rsplit ('/', 1) [0]
+                    targetFilePreName = getObfuscatedName (obfuscatedWordList.index (sourceFilePreName), sourceFilePreName)
+                except: # Not in list, e.g. toplevel module name
+                    targetFilePreName = sourceFilePreName
+                
+                # Obfuscate module subdir names, but only above the project root!
+                targetChunks = targetRelSubDirectory.split ('/')
+                for index in range (len (targetChunks)):
+                    try:
+                        targetChunks [index] = getObfuscatedName (obfuscatedWordList.index (targetChunks [index]), targetChunks [index])
+                    except: # Not in list
+                        pass
+                targetRelSubDirectory = '/'.join (targetChunks)
+                targetSubDirectory = '{0}{1}'.format (targetRootDirectory, targetRelSubDirectory) .rsplit ('/', 1) [0]
 
             # Bail before the actual file path / creation on a dry run 
             if dryRun : continue

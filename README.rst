@@ -30,13 +30,15 @@ Bugs fixed:
 
 What's new:
 
-- implementation of Opy as an import / library provided 
+- implementation of Opy as an import / library provided
+- replacement_modules *BETA* feature added 
 - mask_external_modules *BETA* feature added
 - skip_public *BETA* feature added
-- added dry_run option
-- added analyze() function to library to assist with identification
-  of obfuscated imports / vs left in clear text / vs "masked"
+- added dry_run and prepped_only options
+- added analyze() function to library to assist with the identification
+  of obfuscated imports etc.
 - line continuations combined into single lines
+
 - possibility to specify input dir, output dir and config file documented
 - skip_path_fragments implemented
 - explanatory comments in config file made more clear
@@ -135,6 +137,9 @@ Known limitations:
 - If the pep8_comments option is set to True, however, only a <blank><blank>#<blank> cannot be used in the middle or at the end of a string literal
 - Obfuscation of string literals is unsuitable for sensitive information since it can be trivially broken
 - No renaming back door support for methods starting with __ (non-overridable methods, also known as private methods)
+
+- Hardcoded strings with "special prefixes" e.g. b'\x00' are being broken by string obfuscation
+- Some keyword arguments may have issues??? (further details tbd...)
 
 * "Skip Public" (beta feature) has some weaknesses.
  	This can encounter "name collisions", and end up leaving some identifiers 
