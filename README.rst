@@ -138,7 +138,6 @@ Known limitations:
 - Obfuscation of string literals is unsuitable for sensitive information since it can be trivially broken
 - No renaming back door support for methods starting with __ (non-overridable methods, also known as private methods)
 
-- Hardcoded strings with "special prefixes" e.g. b'\x00' are being broken by string obfuscation
 - Some keyword arguments may have issues??? (further details tbd...)
 
 * "Skip Public" (beta feature) has some weaknesses.

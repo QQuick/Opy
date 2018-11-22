@@ -318,7 +318,7 @@ Licence:
         stringIndex += 1
         return replacedStrings [stringIndex]
 
-    stringRegEx = re.compile (r'([ru]|ru|ur)?(({0})|({1})|({2})|({3}))'.format (
+    stringRegEx = re.compile (r'([ru]|ru|ur|[rb]|rb|br)?(({0})|({1})|({2})|({3}))'.format (
         r"'''.*?(?<![^\\]\\)(?<![^\\]\')'''",
         r'""".*?(?<![^\\]\\)(?<![^\\]\")"""',
         r"'.*?(?<![^\\]\\)'",
