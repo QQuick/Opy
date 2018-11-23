@@ -37,6 +37,8 @@ What's new:
 - added dry_run and prepped_only options
 - added analyze() function to library to assist with the identification
   of obfuscated imports etc.
+- added class OpyFile for applying "quick patches" to obfuscated files
+  (applicable when using Opy as a library)
 - line continuations combined into single lines
 
 - possibility to specify input dir, output dir and config file documented
@@ -143,7 +145,7 @@ Known limitations:
 * "Skip Public" (beta feature) has some weaknesses.
  	This can encounter "name collisions", and end up leaving some identifiers 
  	in clear text that you wanted to be obfuscated.  Such should NOT cause
- 	operational errors, at least in the resulting code.  
+ 	operational errors at least.  
 
 * "Masking" (beta feature) fails under a few conditions. 
 	A) It is not yet respectful of scoping details. 

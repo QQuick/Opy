@@ -3,6 +3,7 @@ Library Interface for Opy Utility
 """
 import settings
 from settings import ConfigSettings as OpyConfig
+from patcher import OpyFile
 
 def obfuscate( sourceRootDirectory = None
              , targetRootDirectory = None
@@ -48,7 +49,8 @@ def analyze( sourceRootDirectory = None
     settings.configSettings.subset_files = init_subset_files
     settings.configSettings.dry_run      = init_dry_run
     
-    return ( opy.obfuscatedWordList          
+    return ( opy.obfuscatedWordList  
+           , opy.skipWordList        
            , opy.parser.obfuscatedModImports 
            , opy.parser.maskedIdentifiers     
     )

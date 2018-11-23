@@ -448,6 +448,7 @@ import {0} as currentModule
 
     obfuscatedWordList = []
     obfuscatedRegExList = []
+    skippedPublicSet=set()
 
     for sourceFilePath in sourceFilePathList:
         if sourceFilePath == configFilePath:    # Don't copy the config file to the target directory
@@ -465,8 +466,7 @@ import {0} as currentModule
             sourceFile = codecs.open (sourceFilePath, encoding = 'utf-8')
             content = sourceFile.read () 
             sourceFile.close ()
-
-            skippedPublicSet=set()
+            
             if skipPublicIdentifiers:
                 skippedPublicSet.update( parser.findPublicIdentifiers( content ) )
                 skipWordSet.update( skippedPublicSet )   
