@@ -3,7 +3,7 @@ Library Interface for Opy Utility
 """
 import settings
 from settings import ConfigSettings as OpyConfig
-from patcher import OpyFile
+from patcher import OpyFile, patch, setLine, replaceInLine
 
 def obfuscate( sourceRootDirectory = None
              , targetRootDirectory = None
