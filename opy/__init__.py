@@ -1,9 +1,9 @@
 """
 Library Interface for Opy Utility 
 """
-import settings
-from settings import ConfigSettings as OpyConfig
-from patcher import OpyFile, patch, setLine, replaceInLine
+from . import settings
+from . settings import ConfigSettings as OpyConfig
+from . patcher import OpyFile, patch, setLine, replaceInLine
 
 def obfuscate( sourceRootDirectory = None
              , targetRootDirectory = None
@@ -17,11 +17,11 @@ def obfuscate( sourceRootDirectory = None
     settings.configSettings      = configSettings
     settings.configFilePath = ( 
         configFilePath if configSettings is None else False )        
-    print "Opy Settings"
-    print "sourceRootDirectory: %s" % (sourceRootDirectory,)
-    print "targetRootDirectory: %s" % (targetRootDirectory,)
-    print "configFilePath: %s"      % (configFilePath,)
-    print "configSettings: \n%s"    % (configSettings,)
+    print( "Opy Settings" )
+    print( "sourceRootDirectory: %s" % (sourceRootDirectory,) )
+    print( "targetRootDirectory: %s" % (targetRootDirectory,) )
+    print( "configFilePath: %s"      % (configFilePath,) )
+    print( "configSettings: \n%s"    % (configSettings,) )
     __runOpy()
 
 def analyze( sourceRootDirectory = None
@@ -41,9 +41,9 @@ def analyze( sourceRootDirectory = None
     settings.configSettings.subset_files  = fileList
     settings.configSettings.dry_run       = True
          
-    print "Analyze Opy Settings"
-    print "sourceRootDirectory: %s" % (sourceRootDirectory,)
-    print "configSettings: \n%s"    % (configSettings,)    
+    print( "Analyze Opy Settings" )
+    print( "sourceRootDirectory: %s" % (sourceRootDirectory,) )
+    print( "configSettings: \n%s"    % (configSettings,) )
     __runOpy()
 
     settings.configSettings.subset_files = init_subset_files
@@ -72,5 +72,5 @@ def __runOpy():
             except : # Python 3.4+                    
                 import importlib
                 importlib.reload( opy ) # @UndefinedVariable
-    except : import opy
+    except : from . import opy
     

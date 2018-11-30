@@ -1,5 +1,6 @@
 import re
 import ast
+import six 
 
 NEWLINE              = '\n'
 SPACE                = ' '    
@@ -193,12 +194,12 @@ def __parseImports( fileContent, mode, clearTextMods=[], replacements={} ):
         revLines = []   
         for line in lines:
             if not isImportLn( line )[0]:
-                for name, regEx in dotAliasesRegEx.iteritems():
+                for name, regEx in six.iteritems( dotAliasesRegEx ):
                     modAlias = __modAliases.get(name)
                     mbrAlias = __mbrAliases.get(name)                    
                     if mbrAlias: line = regEx.sub( mbrAlias + MEMBER_DELIM, line )
                     elif modAlias: line = regEx.sub( modAlias + MEMBER_DELIM, line )                    
-                for name, regEx in nakedAliasesRegEx.iteritems():
+                for name, regEx in six.iteritems( nakedAliasesRegEx ):
                     modAlias = __modAliases.get(name)
                     mbrAlias = __mbrAliases.get(name)                    
                     if mbrAlias: line = regEx.sub( mbrAlias, line )

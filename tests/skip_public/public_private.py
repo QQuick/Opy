@@ -2,12 +2,12 @@ aGlobalPublicString = "A"
 __aGlobalPrivateString = "B"
 
 def aGlobalPublicFunc():
-    print aGlobalPublicString
-    print __aGlobalPrivateString 
+    print( aGlobalPublicString )
+    print( __aGlobalPrivateString ) 
 
 def __aGlobalPrivateFunc():
-    print aGlobalPublicString
-    print __aGlobalPrivateString 
+    print( aGlobalPublicString )
+    print( __aGlobalPrivateString ) 
             
 class aPublicClass :
     def __init__(self):
@@ -18,8 +18,8 @@ class aPublicClass :
         self.__privateFuncInPublicClass()
 
     def __privateFuncInPublicClass(self):
-        print self.publicStringInPublicClass
-        print self.__privateStringInPublicClass
+        print( self.publicStringInPublicClass )
+        print( self.__privateStringInPublicClass )
         
 class __aPrivateClass :
     def __init__(self):
@@ -30,8 +30,8 @@ class __aPrivateClass :
         self.__privateFuncInPrivateClass()
 
     def __privateFuncInPrivateClass(self):
-        print self.publicStringInPrivateClass
-        print self.__privateStringInPrivateClass      
+        print( self.publicStringInPrivateClass )
+        print( self.__privateStringInPrivateClass )      
 
 if __name__ == '__main__':
     
@@ -39,11 +39,11 @@ if __name__ == '__main__':
     __aGlobalPrivateFunc()
     
     pub = aPublicClass()
-    print pub.publicStringInPublicClass    
+    print( pub.publicStringInPublicClass )   
     pub.publicFuncInPublicClass()
         
     priv = __aPrivateClass()
     priv.publicFuncInPrivateClass()                
-    print priv.publicStringInPrivateClass    
+    print( priv.publicStringInPrivateClass )    
     
             

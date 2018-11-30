@@ -1,6 +1,4 @@
 #! /usr/bin/python
-import parser
-
 license = (
 '''_opy_Copyright 2014, 2015, 2016, 2017 Jacques de Hooge, GEATEC engineering, www.geatec.com
 
@@ -26,12 +24,20 @@ import importlib  # @UnusedImport
 import random
 import codecs
 import shutil
-import __builtin__
+
+isPython2 = sys.version_info [0] == 2
+if isPython2 : 
+    import __builtin__
+else:
+    import builtins
+    
 try: 
-    import settings 
+    from . import settings 
     isLibraryInvoked = settings.isLibraryInvoked
 except:
     isLibraryInvoked=False
+
+from . import parser
    
 # =========== Initialize constants
 
@@ -44,8 +50,7 @@ if (__name__ == '__main__') or isLibraryInvoked:
     print ('Copyright (C) Geatec Engineering. License: Apache 2.0 at  http://www.apache.org/licenses/LICENSE-2.0\n')
 
     random.seed ()
-
-    isPython2 = sys.version_info [0] == 2
+    
     charBase = 2048         # Choose high to prevent string recoding from generating special chars like ', " and \
     stringNr = charBase
     charModulus = 7
@@ -438,7 +443,8 @@ import {0} as currentModule
             except:
                 pass
 
-    addExternalNames (__builtin__) 
+
+    addExternalNames (__builtin__ if isPython2 else builtins) 
     addExternalNames (externalModules)
 
     skipWordList = list (skipWordSet)

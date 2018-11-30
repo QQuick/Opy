@@ -1,6 +1,7 @@
-import io, sys
+import io
+import six
 
-isPython2 = sys.version_info [0] == 2
+isPython2 = six.PY2
 
 isLibraryInvoked    = False
 printHelp           = False
@@ -44,7 +45,6 @@ class ConfigSettings :
             ,"collections"
             ,"json"
             ,"datetime" 
-            ,'ConfigParser'
         ]
         self.replacement_modules = {}
         self.plain_files = []
@@ -80,8 +80,8 @@ class ConfigSettings :
         for item in self.external_modules : text += "%s\n" % item
         text += "'''\n"
         text += "replacement_modules ='''\n"
-        for k,v in self.replacement_modules.iteritems() : 
-            text += "%s:%s\n" % (k,v)        
+        for k,v in six.iteritems( self.replacement_modules ) : 
+            text += "%s:%s\n" % (k,v)
         text += "'''\n"
         text += "plain_files ='''\n"
         for item in self.plain_files : text += "%s\n" % item
@@ -94,6 +94,7 @@ class ConfigSettings :
         text += "'''\n"
         return text
 
-    def toVirtualFile( self ): return io.StringIO( unicode(str(self)) )         
+    def toVirtualFile( self ):         
+        return io.StringIO( unicode(str(self)) if six.PY2 else str(self) )         
     
 configSettings = ConfigSettings()
