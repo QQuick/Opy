@@ -36,7 +36,7 @@ What's new:
 - skip_public *BETA* feature added
 - added dry_run and prepped_only options
 - added analyze() function to library to assist with the identification
-  of obfuscated imports etc.
+  of obfuscated files, words, imports etc.
 - added class OpyFile for applying "quick patches" to obfuscated files
   (applicable when using Opy as a library)
 - line continuations combined into single lines
@@ -143,18 +143,22 @@ Known limitations:
 - Some keyword arguments may have issues??? (further details tbd...)
 
 * "Skip Public" (beta feature) has some weaknesses.
- 	This can encounter "name collisions", and end up leaving some identifiers 
- 	in clear text that you wanted to be obfuscated.  Such should NOT cause
- 	operational errors at least.  
+	As with other features, this can encounter "name collisions". In this case,
+	it can end up leaving some identifiers in clear text that you wanted to be 
+	obfuscated.  Such should NOT cause operational errors at least.  
 
 * "Masking" (beta feature) fails under a few conditions. 
-	A) It is not yet respectful of scoping details. 
- 	B) It can cause name collisions, as it is not yet "context aware".
- 	C) There is a problem in the handling of masking module members with 
- 	   names that are otherwise set to be preserved in clear text. 
-    The solution to such problems is to assign YOUR OWN ALIASES for those use 
+	A) It is not yet respectful of scoping details.
+	B) It is not yet able to parse imports statements which are not on
+	   their own lines (e.g. one-line conditional imports, semicolon 
+	   delimited multi-statement import lines... ).  
+ 	C) It can cause name collisions, as it is not yet "context aware".
+ 	D) There is a problem in the handling of masking module members with 
+ 	   names that are otherwise set to be preserved in clear text. See
+ 	   examples. 
+    The solution to all such problems is to assign YOUR OWN ALIASES for those use 
     cases which the utility is not yet able to resolve. See the "bugs" directory
-    for examples of known problems (which will hopefully be resolved!). 
+    for examples of known problems (which will all hopefully be resolved!). 
 
 	Masking name collision example 1:
 	

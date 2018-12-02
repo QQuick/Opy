@@ -452,6 +452,7 @@ import {0} as currentModule
 
     # ============ Generate obfuscated files
 
+    obfuscatedFileDict = {}
     obfuscatedWordList = []
     obfuscatedRegExList = []
     skippedPublicSet=set()
@@ -462,7 +463,7 @@ import {0} as currentModule
 
         sourceDirectory, sourceFileName = sourceFilePath.rsplit ('/', 1)
         sourceFilePreName, sourceFileNameExtension = (sourceFileName.rsplit ('.', 1) + ['']) [ : 2]
-        targetRelSubDirectory =  sourceFilePath [len (sourceRootDirectory) : ]
+        targetRelSubDirectory = sourceFilePath [len (sourceRootDirectory) : ]
         
         # Read plain source
 
@@ -563,7 +564,7 @@ import {0} as currentModule
             # Remove empty lines
             
             content = '\n'.join ([line for line in [line.rstrip () for line in content.split ('\n')] if line])
-                
+
             if preppedOnly :
                 targetFilePreName = sourceFilePreName 
                 targetSubDirectory = '{0}{1}'.format (targetRootDirectory, targetRelSubDirectory) .rsplit ('/', 1) [0]
@@ -584,11 +585,16 @@ import {0} as currentModule
                 targetRelSubDirectory = '/'.join (targetChunks)
                 targetSubDirectory = '{0}{1}'.format (targetRootDirectory, targetRelSubDirectory) .rsplit ('/', 1) [0]
 
-            # Bail before the actual file path / creation on a dry run 
+            # Create target path and track                        
+            clearPath = '{0}/{1}.{2}'.format (targetRelSubDirectory, sourceFilePreName, sourceFileNameExtension)
+            obfusPath = '{0}/{1}.{2}'.format (targetSubDirectory,    targetFilePreName, sourceFileNameExtension)
+            obfuscatedFileDict[clearPath] = obfusPath
+
+            # Bail before the actual path / file creation on a dry run 
             if dryRun : continue
 
-            # Create target path and write file            
-            targetFile = createFilePath ('{0}/{1}.{2}'.format (targetSubDirectory, targetFilePreName, sourceFileNameExtension), open = True)
+            # Create target path and write file                        
+            targetFile = createFilePath (obfusPath, open = True)
             targetFile.write (content)
             targetFile.close ()
         elif (not dryRun) and (not sourceFileNameExtension in skipFileNameExtensionList):
@@ -599,6 +605,7 @@ import {0} as currentModule
             createFilePath (targetFilePath)
             shutil.copyfile (sourceFilePath, targetFilePath)
             
+    print ('Obfuscated files: {0}'.format ( obfuscatedFileDict ))
     print ('Obfuscated words: {0}'.format (len (obfuscatedWordList)))
     print ('Obfuscated module imports: {0}'.format (parser.obfuscatedModImports))
     print ('Masked identifier imports: {0}'.format (parser.maskedIdentifiers))

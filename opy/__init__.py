@@ -49,7 +49,8 @@ def analyze( sourceRootDirectory = None
     settings.configSettings.subset_files = init_subset_files
     settings.configSettings.dry_run      = init_dry_run
     
-    return ( opy.obfuscatedWordList  
+    return ( opy.obfuscatedFileDict
+           , opy.obfuscatedWordList  
            , opy.skipWordList        
            , opy.parser.obfuscatedModImports 
            , opy.parser.maskedIdentifiers     
