@@ -10,6 +10,7 @@ def obfuscate( sourceRootDirectory = None
              , configFilePath      = None
              , configSettings      = None
              ):    
+    global opy
     settings.isLibraryInvoked    = True
     settings.printHelp           = False
     settings.sourceRootDirectory = sourceRootDirectory
@@ -23,6 +24,12 @@ def obfuscate( sourceRootDirectory = None
     print( "configFilePath: %s"      % (configFilePath,) )
     print( "configSettings: \n%s"    % (configSettings,) )
     __runOpy()
+    return ( opy.obfuscatedFileDict
+           , opy.obfuscatedWordList  
+           , opy.skipWordList        
+           , opy.parser.obfuscatedModImports 
+           , opy.parser.maskedIdentifiers     
+    )    
 
 def analyze( sourceRootDirectory = None
            , fileList            = []  
