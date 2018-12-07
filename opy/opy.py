@@ -38,7 +38,7 @@ except:
     isLibraryInvoked=False
 
 from . import parser
-   
+
 # =========== Initialize constants
 
 programName = 'opy'
@@ -50,7 +50,7 @@ if (__name__ == '__main__') or isLibraryInvoked:
     print ('Copyright (C) Geatec Engineering. License: Apache 2.0 at  http://www.apache.org/licenses/LICENSE-2.0\n')
 
     random.seed ()
-    
+
     charBase = 2048         # Choose high to prevent string recoding from generating special chars like ', " and \
     stringNr = charBase
     charModulus = 7
@@ -604,7 +604,7 @@ import {0} as currentModule
             targetFilePath = '{0}/{1}'.format (targetSubDirectory, sourceFileName)
             createFilePath (targetFilePath)
             shutil.copyfile (sourceFilePath, targetFilePath)
-            
+                
     print ('Obfuscated files: {0}'.format ( obfuscatedFileDict ))
     print ('Obfuscated words: {0}'.format (len (obfuscatedWordList)))
     print ('Obfuscated module imports: {0}'.format (parser.obfuscatedModImports))

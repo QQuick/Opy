@@ -7,6 +7,9 @@ scrDir    = os.path.join( parentDir, "dog_walker" )
 trgDir    = os.path.join( thisDir,   "obfuscated" )
 cfgFile   = os.path.join( thisDir,   "test_config.txt" )
 
-obfuscate(   sourceRootDirectory = scrDir
-           , targetRootDirectory = trgDir
-           , configFilePath      = cfgFile )
+results = obfuscate( sourceRootDirectory = scrDir
+                   , targetRootDirectory = trgDir
+                   , configFilePath      = cfgFile )
+
+print( "obfuscatedWordList" )
+print( results.obfuscatedWordList )

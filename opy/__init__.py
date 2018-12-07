@@ -4,7 +4,15 @@ Library Interface for Opy Utility
 from . import settings
 from . settings import ConfigSettings as OpyConfig
 from . patcher import OpyFile, patch, setLine, replaceInLine
-
+   
+class OpyResults:
+    def __init__(self):
+        self.obfuscatedFileDict     = None
+        self.obfuscatedWordList     = None
+        self.obfuscatedModImports   = None
+        self.maskedIdentifiers      = None
+        self.skippedPublicSet       = None
+            
 def obfuscate( sourceRootDirectory = None
              , targetRootDirectory = None
              , configFilePath      = None
@@ -22,15 +30,9 @@ def obfuscate( sourceRootDirectory = None
     print( "sourceRootDirectory: %s" % (sourceRootDirectory,) )
     print( "targetRootDirectory: %s" % (targetRootDirectory,) )
     print( "configFilePath: %s"      % (configFilePath,) )
-    print( "configSettings: \n%s"    % (configSettings,) )
-    __runOpy()
-    return ( opy.obfuscatedFileDict
-           , opy.obfuscatedWordList  
-           , opy.skipWordList        
-           , opy.parser.obfuscatedModImports 
-           , opy.parser.maskedIdentifiers     
-    )    
-
+    print( "configSettings: \n%s"    % (configSettings,) )    
+    return __runOpy()
+    
 def analyze( sourceRootDirectory = None
            , fileList            = []  
            , configSettings      = OpyConfig()
@@ -51,17 +53,12 @@ def analyze( sourceRootDirectory = None
     print( "Analyze Opy Settings" )
     print( "sourceRootDirectory: %s" % (sourceRootDirectory,) )
     print( "configSettings: \n%s"    % (configSettings,) )
-    __runOpy()
+    results = __runOpy()
 
     settings.configSettings.subset_files = init_subset_files
     settings.configSettings.dry_run      = init_dry_run
     
-    return ( opy.obfuscatedFileDict
-           , opy.obfuscatedWordList  
-           , opy.skipWordList        
-           , opy.parser.obfuscatedModImports 
-           , opy.parser.maskedIdentifiers     
-    )
+    return results
     
 def printHelp():    
     settings.isLibraryInvoked = True
@@ -81,4 +78,10 @@ def __runOpy():
                 import importlib
                 importlib.reload( opy ) # @UndefinedVariable
     except : from . import opy
-    
+    results = OpyResults()
+    results.obfuscatedFileDict   = opy.obfuscatedFileDict
+    results.obfuscatedWordList   = opy.obfuscatedWordList
+    results.obfuscatedModImports = opy.skipWordList
+    results.maskedIdentifiers    = opy.parser.obfuscatedModImports 
+    results.skippedPublicSet     = opy.parser.maskedIdentifiers 
+    return results
