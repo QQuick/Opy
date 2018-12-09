@@ -20,6 +20,7 @@ IDENTIFIER_DOT_REGEX = r'\b{0}\.\b'
 CONTINUED_TEMPLATE   = "%s%s%s"
 LONG_LINE_TEMPLATE   = "%s%s"
 MAGIC_PREFFIX = MAGIC_SUFFIX = PRIVATE_PREFIX = "__"
+WILDCARD             = "*"
 
 # -----------------------------------------------------------------------------
 obfuscatedModImports = set()
@@ -130,6 +131,9 @@ def __parseImports( fileContent, mode, clearTextMods=[], replacements={} ):
             # tokenize the list item 
             tokens = item.split( SPACE )
             importName = tokens[0]
+            if importName==WILDCARD:
+                revisedImports.append( item ) 
+                continue
             if isImportLine :
                 modName = importName
                 # on an import line, if the module name is not  
