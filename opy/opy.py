@@ -464,7 +464,8 @@ import {0} as currentModule
         sourceDirectory, sourceFileName = sourceFilePath.rsplit ('/', 1)
         sourceFilePreName, sourceFileNameExtension = (sourceFileName.rsplit ('.', 1) + ['']) [ : 2]
         targetRelSubDirectory = sourceFilePath [len (sourceRootDirectory) : ]
-        
+        clearRelPath = targetRelSubDirectory[1:] # remove leading /
+                
         # Read plain source
 
         if sourceFileNameExtension in sourceFileNameExtensionList and not sourceFilePath in plainFilePathList:
@@ -564,7 +565,7 @@ import {0} as currentModule
             # Remove empty lines
             
             content = '\n'.join ([line for line in [line.rstrip () for line in content.split ('\n')] if line])
-
+            
             if preppedOnly :
                 targetFilePreName = sourceFilePreName 
                 targetSubDirectory = '{0}{1}'.format (targetRootDirectory, targetRelSubDirectory) .rsplit ('/', 1) [0]
@@ -585,10 +586,9 @@ import {0} as currentModule
                 targetRelSubDirectory = '/'.join (targetChunks)
                 targetSubDirectory = '{0}{1}'.format (targetRootDirectory, targetRelSubDirectory) .rsplit ('/', 1) [0]
 
-            # Create target path and track                        
-            clearPath = '{0}/{1}.{2}'.format (targetRelSubDirectory, sourceFilePreName, sourceFileNameExtension)
-            obfusPath = '{0}/{1}.{2}'.format (targetSubDirectory,    targetFilePreName, sourceFileNameExtension)
-            obfuscatedFileDict[clearPath] = obfusPath
+            # Create target path and track it against clear text relative source                       
+            obfusPath = '{0}/{1}.{2}'.format (targetSubDirectory, targetFilePreName, sourceFileNameExtension)
+            obfuscatedFileDict[clearRelPath] = obfusPath
 
             # Bail before the actual path / file creation on a dry run 
             if dryRun : continue
