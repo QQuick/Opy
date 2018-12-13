@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 license = (
-'''_opy_Copyright 2014, 2015, 2016, 2017 Jacques de Hooge, GEATEC engineering, www.geatec.com
+'''_opy_Copyright 2014, 2015, 2016, 2017, 2018 Jacques de Hooge, GEATEC engineering, www.geatec.com
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,19 +28,30 @@ import shutil
 
 # =========== Initialize constants
 
+isPython2 = sys.version_info [0] == 2
+
+if isPython2:
+    import __builtin__ as builtIn
+else:
+    import builtins as builtIn
+
 programName = 'opy'
-programVersion = '1.1.28'
+programVersion = '1.1.29'
 
-if __name__ == '__main__':
-    print ('{} (TM) Configurable Multi Module Python Obfuscator Version {}'.format (programName.capitalize (), programVersion))
-    print ('Copyright (C) Geatec Engineering. License: Apache 2.0 at  http://www.apache.org/licenses/LICENSE-2.0\n')
+random.seed ()
 
-    random.seed ()
+charBase = 2048         # Choose high to prevent string recoding from generating special chars like ', " and \
+stringNr = charBase
+charModulus = 7
 
-    isPython2 = sys.version_info [0] == 2
-    charBase = 2048         # Choose high to prevent string recoding from generating special chars like ', " and \
-    stringNr = charBase
-    charModulus = 7
+print ('{} (TM) Configurable Multi Module Python Obfuscator Version {}'.format (programName.capitalize (), programVersion))
+print ('Copyright (C) Geatec Engineering. License: Apache 2.0 at  http://www.apache.org/licenses/LICENSE-2.0\n')
+
+def main ():
+    global stringIndex
+    global stringNr
+    global commentIndex
+    global nrOfSpecialLines
 
     # =========== Utilities
 
@@ -168,27 +179,28 @@ Licence:
         print (exception)
         printHelpAndExit (1)
         
-    exec (configFile.read ())
+    exec (configFile.read (), globals (), locals ())
     configFile.close ()
     
+    aLocals = locals ()
     def getConfig (parameter, default):
         try:
-            return eval (parameter)
+            return aLocals [parameter]
         except:
             return default
     
     obfuscateStrings = getConfig ('obfuscate_strings', False)
     asciiStrings = getConfig ('ascii_strings', False)
-    obfuscatedNameTail = getConfig ('obfuscated_name_tail', '_{}_')
+    obfuscatedNameTail = getConfig ('obfuscated_name_tail', '_{}_'.format (programName))
     plainMarker = getConfig ('plain_marker', '_{}_'.format (programName))
     pep8Comments = getConfig ('pep8_comments', True)
-    sourceFileNameExtensionList = getConfig ('source_extensions.split ()', ['py', 'pyx'])
-    skipFileNameExtensionList = getConfig ('skip_extensions.split ()', ['pyc'])
-    skipPathFragmentList = getConfig ('skip_path_fragments.split ()', [])
-    externalModuleNameList = getConfig ('external_modules.split ()', [])
-    plainFileRelPathList = getConfig ('plain_files.split ()', [])
-    extraPlainWordList = getConfig ('plain_names.split ()', [])
-
+    sourceFileNameExtensionList = getConfig ('source_extensions', 'py pyx') .split ()
+    skipFileNameExtensionList = getConfig ('skip_extensions', 'pyc') .split ()
+    skipPathFragmentList = getConfig ('skip_path_fragments', '') .split ()
+    externalModuleNameList = getConfig ('external_modules', '') .split ()
+    plainFileRelPathList = getConfig ('plain_files', '') .split ()
+    extraPlainWordList = getConfig ('plain_names', '') .split ()
+    
     # ============ Gather source file names
 
     rawSourceFilePathList = [
@@ -230,7 +242,7 @@ Licence:
                 r'(?<!")',
                 r'  # '  # According to PEP8 an inline comment should start like this.
             ), re.MULTILINE)
-        if pep8_comments else
+        if pep8Comments else
             re.compile (r'{0}{1}{2}.*?$'.format (
                 r"(?<!')",
                 r'(?<!")',
@@ -381,8 +393,8 @@ import {0} as currentModule
                 addExternalNames (attribute)
             except:
                 pass
-
-    addExternalNames (__builtins__)
+                
+    addExternalNames (builtIn)
     addExternalNames (externalModules)
 
     skipWordList = list (skipWordSet)
@@ -520,4 +532,7 @@ import {0} as currentModule
     # Opyfying something twice can and is allowed to fail.
     # The obfuscation for e.g. variable 1 in round 1 can be the same as the obfuscation for e.g. variable 2 in round 2.
     # If in round 2 variable 2 is replaced first, the obfuscation from round 1 for variable 1 will be replaced by the same thing.
+    
+if __name__ == '__main__':
+    main ()
     

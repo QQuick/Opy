@@ -34,7 +34,9 @@ pep8_comments = True            # If True, only inline comments of the form <bla
 
 source_extensions = '''
 py
+PY
 pyx
+PYX
 '''
 
 
