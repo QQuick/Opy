@@ -72,7 +72,7 @@ def run (*params):
     except Exception as exception:
         print (traceback.format_exc ())
         
-    #sys.stdout = old_stdout
+    sys.stdout = old_stdout
     sys.stderr = old_stderr
 
     return new_stdout.getvalue (), new_stderr.getvalue (), exit_status
