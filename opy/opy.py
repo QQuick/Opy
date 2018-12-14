@@ -1,5 +1,4 @@
 #! /usr/bin/python
-
 license = (
 '''_opy_Copyright 2014, 2015, 2016, 2017 Jacques de Hooge, GEATEC engineering, www.geatec.com
 
@@ -21,30 +20,44 @@ import os
 import sys
 import errno
 import keyword
-import importlib
+import importlib  # @UnusedImport
 import random
 import codecs
 import shutil
 
+isPython2 = sys.version_info [0] == 2
+if isPython2 : 
+    import __builtin__
+else:
+    import builtins
+    
+try: 
+    from . import settings 
+    isLibraryInvoked = settings.isLibraryInvoked
+except:
+    isLibraryInvoked=False
+
+from . import parser
+
 # =========== Initialize constants
 
 programName = 'opy'
-programVersion = '1.1.28'
+programVersion = '1.1.28.1' # Changed from 1.1.28 to denote fork
 
-if __name__ == '__main__':
+if (__name__ == '__main__') or isLibraryInvoked:
+    
     print ('{} (TM) Configurable Multi Module Python Obfuscator Version {}'.format (programName.capitalize (), programVersion))
     print ('Copyright (C) Geatec Engineering. License: Apache 2.0 at  http://www.apache.org/licenses/LICENSE-2.0\n')
 
     random.seed ()
 
-    isPython2 = sys.version_info [0] == 2
     charBase = 2048         # Choose high to prevent string recoding from generating special chars like ', " and \
     stringNr = charBase
     charModulus = 7
 
-    # =========== Utilities
+    # =========== Utilities   
 
-    def createFilePath (filePath, open = False):
+    def createFilePath (filePath, open = False):  # @ReservedAssignment
         try:
             os.makedirs (filePath.rsplit ('/', 1) [0])
         except OSError as exception:
@@ -138,35 +151,62 @@ Licence:
 ===============================================================================
 
         '''.format (programName.capitalize (), programName, r'#', license))
-        exit (errorLevel)
+        if errorLevel is not None: exit (errorLevel)
         
     # ============ Assign directories ============
 
-    if len (sys.argv) > 1:
-        for switch in '?', '-h', '--help':
-            if switch in sys.argv [1]:
-                printHelpAndExit (0)
-        sourceRootDirectory = sys.argv [1] .replace ('\\', '/')
-    else:
-        sourceRootDirectory = os.getcwd () .replace ('\\', '/')
+    isLibraryConfig = False
+    if isLibraryInvoked:
+        # Use library settings 
+        if settings.printHelp: printHelpAndExit(None)                   
+                    
+        if settings.sourceRootDirectory is not None:                    
+            sourceRootDirectory = settings.sourceRootDirectory.replace ('\\', '/')
+        else:
+            sourceRootDirectory = os.getcwd () .replace ('\\', '/')
 
-    if len (sys.argv) > 2:
-        targetRootDirectory = sys.argv [2] .replace ('\\', '/')
-    else:
-        targetRootDirectory = '{0}/{1}_{2}'.format (* (sourceRootDirectory.rsplit ('/', 1) + [programName]))
+        if settings.targetRootDirectory is not None:
+            targetRootDirectory = settings.targetRootDirectory.replace ('\\', '/')
+        else:
+            targetRootDirectory = '{0}/{1}_{2}'.format (* (sourceRootDirectory.rsplit ('/', 1) + [programName]))
 
-    if len (sys.argv) > 3:
-        configFilePath = sys.argv [3] .replace ('\\', '/')
+        if settings.configFilePath==False :
+            isLibraryConfig = True    
+            configFilePath = ""
+        elif settings.configFilePath is not None:
+            configFilePath = settings.configFilePath.replace ('\\', '/')
+        else:
+            configFilePath = '{0}/{1}_config.txt'.format (sourceRootDirectory, programName)    
     else:
-        configFilePath = '{0}/{1}_config.txt'.format (sourceRootDirectory, programName)
-        
+        # Use command line arguments
+        if len (sys.argv) > 1:
+            for switch in '?', '-h', '--help':
+                if switch in sys.argv [1]:
+                    printHelpAndExit (0)
+            sourceRootDirectory = sys.argv [1] .replace ('\\', '/')
+        else:
+            sourceRootDirectory = os.getcwd () .replace ('\\', '/')
+
+        if len (sys.argv) > 2:
+            targetRootDirectory = sys.argv [2] .replace ('\\', '/')
+        else:
+            targetRootDirectory = '{0}/{1}_{2}'.format (* (sourceRootDirectory.rsplit ('/', 1) + [programName]))
+
+        if len (sys.argv) > 3:
+            configFilePath = sys.argv [3] .replace ('\\', '/')
+        else:
+            configFilePath = '{0}/{1}_config.txt'.format (sourceRootDirectory, programName)
+            
     # =========== Read config file
-        
-    try:
-        configFile = open (configFilePath)
-    except Exception as exception:
-        print (exception)
-        printHelpAndExit (1)
+
+    if isLibraryConfig:
+        configFile = settings.configSettings.toVirtualFile()
+    else :        
+        try:
+            configFile = open (configFilePath)
+        except Exception as exception:
+            print (exception)
+            printHelpAndExit (1)
         
     exec (configFile.read ())
     configFile.close ()
@@ -186,9 +226,22 @@ Licence:
     skipFileNameExtensionList = getConfig ('skip_extensions.split ()', ['pyc'])
     skipPathFragmentList = getConfig ('skip_path_fragments.split ()', [])
     externalModuleNameList = getConfig ('external_modules.split ()', [])
+    maskExternalModules = getConfig ('mask_external_modules', False)
+    skipPublicIdentifiers = getConfig ('skip_public', False)
     plainFileRelPathList = getConfig ('plain_files.split ()', [])
     extraPlainWordList = getConfig ('plain_names.split ()', [])
+    dryRun = getConfig ('dry_run', False)
+    preppedOnly = getConfig ('prepped_only', False)
+    subsetFilesList = getConfig ('subset_files.split ()', [])
 
+    #TODO: Handle spaces between key/colon/value, e.g. 'key : value'     
+    replacementModulesDict = {}
+    replacementModulesPairList = getConfig ('replacement_modules.split ()', [])
+    for pair in replacementModulesPairList:
+        pairParts = pair.split(":") 
+        try: replacementModulesDict[ pairParts[0].strip() ]= pairParts[1].strip()
+        except: continue        
+        
     # ============ Gather source file names
 
     rawSourceFilePathList = [
@@ -204,6 +257,14 @@ Licence:
         return False
     
     sourceFilePathList = [sourceFilePath for sourceFilePath in rawSourceFilePathList if not hasSkipPathFragment (sourceFilePath)]
+
+    if len(subsetFilesList) > 0 :        
+        def inSubsetFilesList( sourceFilePath ):
+            if sourceFilePath in subsetFilesList : return True
+            baseName = os.path.basename( sourceFilePath )
+            if baseName in subsetFilesList : return True
+            return False
+        sourceFilePathList = [sourceFilePath for sourceFilePath in sourceFilePathList if inSubsetFilesList (sourceFilePath)]
 
     # =========== Define comment swapping tools
             
@@ -230,7 +291,7 @@ Licence:
                 r'(?<!")',
                 r'  # '  # According to PEP8 an inline comment should start like this.
             ), re.MULTILINE)
-        if pep8_comments else
+        if pep8_comments else  # @UndefinedVariable
             re.compile (r'{0}{1}{2}.*?$'.format (
                 r"(?<!')",
                 r'(?<!")',
@@ -262,7 +323,7 @@ Licence:
         stringIndex += 1
         return replacedStrings [stringIndex]
 
-    stringRegEx = re.compile (r'([ru]|ru|ur)?(({0})|({1})|({2})|({3}))'.format (
+    stringRegEx = re.compile (r'([ru]|ru|ur|[rb]|rb|br)?(({0})|({1})|({2})|({3}))'.format (
         r"'''.*?(?<![^\\]\\)(?<![^\\]\')'''",
         r'""".*?(?<![^\\]\\)(?<![^\\]\")"""',
         r"'.*?(?<![^\\]\\)'",
@@ -305,7 +366,7 @@ Licence:
 
     skipWordSet = set (keyword.kwlist + ['__init__'] + extraPlainWordList)  # __init__ should be in, since __init__.py is special
 
-    rawPlainFilePathList = ['{0}/{1}'.format (sourceRootDirectory, plainFileRelPath) for plainFileRelPath in plainFileRelPathList]
+    rawPlainFilePathList = ['{0}/{1}'.format (sourceRootDirectory, plainFileRelPath.replace ('\\', '/')) for plainFileRelPath in plainFileRelPathList]
     
     # Prevent e.g. attempt to open opy_config.txt if it is in a different location but still listed under plain_files
     
@@ -340,7 +401,7 @@ import {0} as currentModule
                         '''.format (externalModuleName),
                         globals ()
                     )
-                    setattr (self, attributeName, currentModule)    
+                    setattr (self, attributeName, currentModule)    # @UndefinedVariable
                 except Exception as exception:
                     print (exception)
                     setattr (self, attributeName, None) # So at least the attribute name will be available
@@ -382,7 +443,8 @@ import {0} as currentModule
             except:
                 pass
 
-    addExternalNames (__builtins__)
+
+    addExternalNames (__builtin__ if isPython2 else builtins) 
     addExternalNames (externalModules)
 
     skipWordList = list (skipWordSet)
@@ -390,8 +452,10 @@ import {0} as currentModule
 
     # ============ Generate obfuscated files
 
+    obfuscatedFileDict = {}
     obfuscatedWordList = []
     obfuscatedRegExList = []
+    skippedPublicSet=set()
 
     for sourceFilePath in sourceFilePathList:
         if sourceFilePath == configFilePath:    # Don't copy the config file to the target directory
@@ -399,16 +463,21 @@ import {0} as currentModule
 
         sourceDirectory, sourceFileName = sourceFilePath.rsplit ('/', 1)
         sourceFilePreName, sourceFileNameExtension = (sourceFileName.rsplit ('.', 1) + ['']) [ : 2]
-        targetRelSubDirectory =  sourceFilePath [len (sourceRootDirectory) : ]
-        
+        targetRelSubDirectory = sourceFilePath [len (sourceRootDirectory) : ]
+        clearRelPath = targetRelSubDirectory[1:] # remove leading /
+                
         # Read plain source
 
         if sourceFileNameExtension in sourceFileNameExtensionList and not sourceFilePath in plainFilePathList:
             stringBase = random.randrange (64)
         
             sourceFile = codecs.open (sourceFilePath, encoding = 'utf-8')
-            content = sourceFile.read ()
+            content = sourceFile.read () 
             sourceFile.close ()
+            
+            if skipPublicIdentifiers:
+                skippedPublicSet.update( parser.findPublicIdentifiers( content ) )
+                skipWordSet.update( skippedPublicSet )   
             
             replacedComments = []
             contentList = content.split ('\n', 2)
@@ -449,26 +518,38 @@ import {0} as currentModule
             # Content list is prepended to normalContent later
             
             normalContent = fromFutureRegEx.sub (moveFromFuture, normalContent)
-                
-            # Obfuscate content without strings
-            
-            # All source words and module name
-            sourceWordSet = set (re.findall (identifierRegEx, normalContent) + [sourceFilePreName])
 
-            # Add source words that are not yet obfuscated and shouldn't be skipped to global list of obfuscated words, preserve order of what's already there
-            strippedSourceWordSet = sourceWordSet.difference (obfuscatedWordList).difference (skipWordSet)  # Leave out what is already or shouldn't be obfuscated
-            strippedSourceWordList = list (strippedSourceWordSet)
-            strippedSourceRegExList = [re.compile (r'\b{0}\b'.format (sourceWord)) for sourceWord in strippedSourceWordList]    # Regex used to replace obfuscated words
-            obfuscatedWordList += strippedSourceWordList            
-            obfuscatedRegExList += strippedSourceRegExList
-            
-            # Replace words to be obfuscated by obfuscated ones
-            for obfuscationIndex, obfuscatedRegEx in enumerate (obfuscatedRegExList):
-                normalContent = obfuscatedRegEx.sub (
-                    getObfuscatedName (obfuscationIndex, obfuscatedWordList [obfuscationIndex]),
-                    normalContent
-                )   # Use regex to prevent replacing word parts
+            # Replace any imported modules per the old/new (key/value) pairs provided
+            if len(replacementModulesDict) > 0 : 
+                normalContent = parser.replaceImports( normalContent, replacementModulesDict )
+                                
+            # Parse content to find imports and optionally provide aliases for those in clear text,
+            # so that they will become "masked" upon obfuscation.
+            if maskExternalModules : 
+                normalContent = parser.injectAliases( normalContent, externalModuleNameList )
+            else:  
+                parser.analyzeImports( normalContent, externalModuleNameList )
+
+            if not preppedOnly :
+                # Obfuscate content without strings
                 
+                # All source words and module name
+                sourceWordSet = set (re.findall (identifierRegEx, normalContent) + [sourceFilePreName])
+                
+                # Add source words that are not yet obfuscated and shouldn't be skipped to global list of obfuscated words, preserve order of what's already there
+                strippedSourceWordSet = sourceWordSet.difference (obfuscatedWordList).difference (skipWordSet)  # Leave out what is already or shouldn't be obfuscated
+                strippedSourceWordList = list (strippedSourceWordSet)
+                strippedSourceRegExList = [re.compile (r'\b{0}\b'.format (sourceWord)) for sourceWord in strippedSourceWordList]    # Regex used to replace obfuscated words
+                obfuscatedWordList += strippedSourceWordList            
+                obfuscatedRegExList += strippedSourceRegExList
+                
+                # Replace words to be obfuscated by obfuscated ones
+                for obfuscationIndex, obfuscatedRegEx in enumerate (obfuscatedRegExList):
+                    normalContent = obfuscatedRegEx.sub (
+                        getObfuscatedName (obfuscationIndex, obfuscatedWordList [obfuscationIndex]),
+                        normalContent
+                    )   # Use regex to prevent replacing word parts
+                    
             # Replace string placeholders by strings
             
             stringIndex = -1
@@ -485,37 +566,50 @@ import {0} as currentModule
             
             content = '\n'.join ([line for line in [line.rstrip () for line in content.split ('\n')] if line])
             
-            # Write target 
-            
-            # Obfuscate module name
-            try:
-                targetFilePreName = getObfuscatedName (obfuscatedWordList.index (sourceFilePreName), sourceFilePreName)
-            except: # Not in list, e.g. toplevel module name
-                targetFilePreName = sourceFilePreName
-            
-            # Obfuscate module subdir names, but only above the project root!
-            targetChunks = targetRelSubDirectory.split ('/')
-            for index in range (len (targetChunks)):
+            if preppedOnly :
+                targetFilePreName = sourceFilePreName 
+                targetSubDirectory = '{0}{1}'.format (targetRootDirectory, targetRelSubDirectory) .rsplit ('/', 1) [0]
+            else :                     
+                # Obfuscate module name
                 try:
-                    targetChunks [index] = getObfuscatedName (obfuscatedWordList.index (targetChunks [index]), targetChunks [index])
-                except: # Not in list
-                    pass
-            targetRelSubDirectory = '/'.join (targetChunks)
-            targetSubDirectory = '{0}{1}'.format (targetRootDirectory, targetRelSubDirectory) .rsplit ('/', 1) [0]
+                    targetFilePreName = getObfuscatedName (obfuscatedWordList.index (sourceFilePreName), sourceFilePreName)
+                except: # Not in list, e.g. toplevel module name
+                    targetFilePreName = sourceFilePreName
+                
+                # Obfuscate module subdir names, but only above the project root!
+                targetChunks = targetRelSubDirectory.split ('/')
+                for index in range (len (targetChunks)):
+                    try:
+                        targetChunks [index] = getObfuscatedName (obfuscatedWordList.index (targetChunks [index]), targetChunks [index])
+                    except: # Not in list
+                        pass
+                targetRelSubDirectory = '/'.join (targetChunks)
+                targetSubDirectory = '{0}{1}'.format (targetRootDirectory, targetRelSubDirectory) .rsplit ('/', 1) [0]
 
-            # Create target path and write file
-            targetFile = createFilePath ('{0}/{1}.{2}'.format (targetSubDirectory, targetFilePreName, sourceFileNameExtension), open = True)
+            # Create target path and track it against clear text relative source                       
+            obfusPath = '{0}/{1}.{2}'.format (targetSubDirectory, targetFilePreName, sourceFileNameExtension)
+            obfuscatedFileDict[clearRelPath] = obfusPath
+
+            # Bail before the actual path / file creation on a dry run 
+            if dryRun : continue
+
+            # Create target path and write file                        
+            targetFile = createFilePath (obfusPath, open = True)
             targetFile.write (content)
             targetFile.close ()
-        elif not sourceFileNameExtension in skipFileNameExtensionList:
+        elif (not dryRun) and (not sourceFileNameExtension in skipFileNameExtensionList):
             targetSubDirectory = '{0}{1}'.format (targetRootDirectory, targetRelSubDirectory) .rsplit ('/', 1) [0]
             
             # Create target path and copy file
             targetFilePath = '{0}/{1}'.format (targetSubDirectory, sourceFileName)
             createFilePath (targetFilePath)
             shutil.copyfile (sourceFilePath, targetFilePath)
-            
+                
+    print ('Obfuscated files: {0}'.format ( obfuscatedFileDict ))
     print ('Obfuscated words: {0}'.format (len (obfuscatedWordList)))
+    print ('Obfuscated module imports: {0}'.format (parser.obfuscatedModImports))
+    print ('Masked identifier imports: {0}'.format (parser.maskedIdentifiers))
+    print ('Skipped public identifiers: {0}'.format (skippedPublicSet))
     
     # Opyfying something twice can and is allowed to fail.
     # The obfuscation for e.g. variable 1 in round 1 can be the same as the obfuscation for e.g. variable 2 in round 2.

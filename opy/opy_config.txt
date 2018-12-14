@@ -51,8 +51,19 @@ pyc
 
 
 #====================================================================================================
-# Fragments that, when occuring in the path of a file, will cause this file to be ignored
-# In other words, such files will neither be ofuscated nor copied
+# Enabling skip_public prevents obfuscating those members of a module which are not explicitly 
+# denoted - or scoped - as "private" (using a __ double underscore prefix).
+# This is most useful for obfuscating a library you wish to distribute, while leaving those 
+# identifiers such as constants, functions, class names, and class attributes in clear text. 
+#====================================================================================================
+
+skip_public = False
+
+
+
+#====================================================================================================
+# Fragments that, when occurring in the path of a file, will cause this file to be ignored
+# In other words, such files will neither be obfuscated nor copied
 # Use this to exclude complete directories from any processing by Opy
 # N.B. Use forward slashes rather than backslashes, also on Windows!
 #====================================================================================================
@@ -73,13 +84,47 @@ external_modules = '''
 re
 os
 sys
+io
 errno
 keyword
 importlib
 random
 codecs
 shutil
+traceback
+collections
+json
+datetime 
 '''
+
+
+
+#====================================================================================================
+# *** BETA FEATURE ***
+#
+# Rather than leave external modules references in clear text, you may instead
+# opt to bundle the source of those into your obfuscated version of the code, thereby
+# allowing you to hide those details as well.  Based on upon your method for bundling,
+# or how your Python path will be configured, etc. you might find it necessary (or easier) 
+# to modify your imports during the obfuscation process.
+# Note: the values for replacement_modules must defined in pairs as old:new (no spaces permitted)   
+#====================================================================================================
+
+replacement_modules = '''
+dummyModule:bundledLibs.dummyReplacement.__init__
+'''
+
+
+
+#====================================================================================================
+# *** BETA FEATURE ***
+#
+# The imported identifiers in the external_modules list (not to be obfuscated),
+# may instead be "masked" by assigning obfuscated ALIASES to them.  This is  
+# fairly trivial to reverse engineer, but still reduces immediate readability.
+#====================================================================================================
+
+mask_external_modules = True
 
 
 
@@ -106,3 +151,34 @@ plain_names = '''
 opy
 poly_walker_test
 '''
+
+
+
+#====================================================================================================
+# Specify a subset of files to process, rather than the entire source directory.  May be useful during
+# the process of tweaking the source or the configuration.  It also allows for running the process
+# in separate steps, with alternate configurations per sets of files. 
+#====================================================================================================
+
+subset_files = '''
+'''
+
+
+
+#====================================================================================================
+# Setting dry_run to True prevents creating any actual results.  Analytics are still performed and  
+# can be evaluated / utilized. 
+#====================================================================================================
+
+dry_run = False
+
+
+
+#====================================================================================================
+# Similar to dry_run, prepped_only prevents the production of obfuscated results. Instead, the clear
+# text, "pre-obfuscation stage" of the files will be produced.  This includes module "replacements",
+# "masks", etc.  This may prove to be highly useful in the process of defining a configuration. 
+#====================================================================================================
+
+prepped_only = False
+
